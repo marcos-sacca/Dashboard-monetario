@@ -4,6 +4,12 @@ body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(-
 .header{background-color:var(--ceer-blue);color:white;padding:2rem;text-align:center;}
 .container{max-width:1400px;margin:0 auto;padding:2rem;}
 
+/* BOTONES DE VISTA MANUAL */
+.view-toggles { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1rem; }
+.btn-toggle { background: white; border: 2px solid var(--ceer-blue); color: var(--ceer-blue); padding: 0.5rem 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-toggle:hover { background: #e0e7ff; }
+.btn-toggle.active { background: var(--ceer-blue); color: white; }
+
 /* SOLAPAS */
 .tabs-header{display:flex;gap:1rem;border-bottom:2px solid var(--gray-300);margin-bottom:2rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:5px;}
 .tab-btn{background:none;border:none;padding:1rem 2rem;font-size:1.05rem;font-weight:700;color:#6b7280;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.3s ease;white-space:nowrap;}
@@ -30,22 +36,26 @@ body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(-
 .card-tools{display:flex;gap:0.5rem;} .card-tools button{background:var(--gray-100);border:1px solid var(--gray-300);color:var(--ceer-blue);border-radius:4px;padding:0.4rem 0.6rem;cursor:pointer;} .card-tools button:hover{background:var(--ceer-blue);color:white;}
 .chart-container{position:relative;height:400px;width:100%;} @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
-/* REGLAS MÁGICAS PARA CELULARES (Se activan solo en pantallas chicas) */
-@media (max-width: 768px) {
-    .chart-grid { grid-template-columns: 1fr; } /* Apila los gráficos 1 abajo del otro */
-    .gen-vars-container { grid-template-columns: 1fr; } /* Apila las cajas del generador */
-    .time-filters { flex-direction: column; width: 100%; box-sizing: border-box; } /* Apila el buscador de fechas */
-    .date-input-group { width: 100%; justify-content: space-between; }
-    .btn-action { width: 100%; }
-    .chart-container { height: 300px; } /* Achica un poco el alto para que entre bien */
-    .card-header { flex-direction: column; align-items: flex-start; }
-    .tab-btn { padding: 1rem; }
-}
+/* MODO CELULAR MANUAL (Activado por botón) */
+body.mobile-mode .chart-grid { grid-template-columns: 1fr; } 
+body.mobile-mode .gen-vars-container { grid-template-columns: 1fr; gap: 1rem; } 
+body.mobile-mode .time-filters { flex-direction: column; width: 100%; box-sizing: border-box; } 
+body.mobile-mode .date-input-group { width: 100%; justify-content: space-between; }
+body.mobile-mode .time-filters .btn-action { width: 100%; }
+body.mobile-mode .chart-container { height: 300px; } 
+body.mobile-mode .card-header { flex-direction: column; align-items: flex-start; }
+body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
 </style></head><body>
 
 <div class="header"><h1 style="font-weight:800;margin:0 0 0.5rem 0;">Dashboard Monetario Avanzado</h1><p style="font-weight:600;margin:0;">Análisis histórico a precios constantes alimentado por BCRA</p></div>
 
 <div class="container">
+    
+    <div class="view-toggles">
+        <button onclick="setMode('desktop')" id="btnDesktop" class="btn-toggle active"><i class="fas fa-desktop"></i> Vista PC</button>
+        <button onclick="setMode('mobile')" id="btnMobile" class="btn-toggle"><i class="fas fa-mobile-alt"></i> Vista Celular</button>
+    </div>
+
     <div class="time-filters">
         <div class="date-input-group"><label>Desde:</label><input type="text" id="dateStart" class="date-input" placeholder="2018-05" maxlength="7" onkeyup="filtrarTexto()"></div>
         <div class="date-input-group"><label>Hasta:</label><input type="text" id="dateEnd" class="date-input" placeholder="2024-12" maxlength="7" onkeyup="filtrarTexto()"></div>
@@ -60,23 +70,23 @@ body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(-
     </div>
 
     <div id="bancarias" class="tab-content active"><div class="chart-grid">
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Préstamos Privados (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartPrestamos')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartPrestamos')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartPrestamos"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Depósitos Privados (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartDepositos')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDepositos')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
-        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Préstamos vs Depósitos Privados (Millones USD)</h3><div class="card-tools"><button onclick="dlPNG('chartUSD')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartUSD')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartUSD"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Préstamos Privados (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartPrestamos')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartPrestamos')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartPrestamos"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Depósitos Privados (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartDepositos')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDepositos')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
+        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Préstamos vs Depósitos (Millones USD)</h3><div class="card-tools"><button onclick="dlPNG('chartUSD')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartUSD')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartUSD"></canvas></div></div>
     </div></div>
 
     <div id="macro" class="tab-content"><div class="chart-grid">
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tipo de Cambio Real Multilateral (General Base 100)</h3><div class="card-tools"><button onclick="dlPNG('chartITCRM')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartITCRM')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartITCRM"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Reservas vs. Compras BCRA (M. USD)</h3><div class="card-tools"><button onclick="dlPNG('chartReservas')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartReservas')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartReservas"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Devaluación Mayorista vs Inflación (%)</h3><div class="card-tools"><button onclick="dlPNG('chartCarrera')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartCarrera')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartCarrera"></canvas></div></div>
-        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Expectativas: IPC Real vs Proyección REM 12m</h3><div class="card-tools"><button onclick="dlPNG('chartIPC')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartIPC')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartIPC"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tipo de Cambio Real (General Base 100)</h3><div class="card-tools"><button onclick="dlPNG('chartITCRM')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartITCRM')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartITCRM"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Reservas vs. Compras BCRA (M. USD)</h3><div class="card-tools"><button onclick="dlPNG('chartReservas')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartReservas')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartReservas"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Devaluación Mayorista vs Inflación (%)</h3><div class="card-tools"><button onclick="dlPNG('chartCarrera')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartCarrera')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartCarrera"></canvas></div></div>
+        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Expectativas: IPC Real vs Proy. REM 12m</h3><div class="card-tools"><button onclick="dlPNG('chartIPC')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartIPC')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartIPC"></canvas></div></div>
     </div></div>
 
     <div id="monetarias" class="tab-content"><div class="chart-grid">
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Base Monetaria vs M2 (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartAgregados')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartAgregados')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartAgregados"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Mapa de Tasas TEA vs IPC Mensual</h3><div class="card-tools"><button onclick="dlPNG('chartTasas')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartTasas')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartTasas"></canvas></div></div>
-        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Seguimiento Diario Tasas (Último Año Hábil)</h3><div class="card-tools"><button onclick="dlPNG('chartDiario')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDiario')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDiario"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Base Monetaria vs M2 (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartAgregados')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartAgregados')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartAgregados"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Mapa de Tasas TEA vs IPC Mensual</h3><div class="card-tools"><button onclick="dlPNG('chartTasas')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartTasas')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartTasas"></canvas></div></div>
+        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Seguimiento Diario Tasas (Último Año)</h3><div class="card-tools"><button onclick="dlPNG('chartDiario')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDiario')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDiario"></canvas></div></div>
     </div></div>
 
     <div id="generador" class="tab-content">
@@ -88,25 +98,41 @@ body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(-
             </div>
             <button class="btn-action" style="width:100%;margin-top:1.5rem;background:#10b981;" onclick="crearGen()"><i class="fas fa-chart-pie"></i> Dibujar Gráfico Personalizado</button>
         </div>
-        <div class="chart-card" id="resultadoGenerador" style="display:none;"><div class="card-header"><h3 class="chart-title">Resultado Analítico</h3><div class="card-tools"><button onclick="dlPNG('chartGenerador')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartGenerador')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartGenerador"></canvas></div></div>
+        <div class="chart-card" id="resultadoGenerador" style="display:none;"><div class="card-header"><h3 class="chart-title">Resultado Analítico</h3><div class="card-tools"><button onclick="dlPNG('chartGenerador')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartGenerador')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartGenerador"></canvas></div></div>
     </div>
 </div>
 
 <script>
+    // Plugin mágico para fondo blanco en PNG
     Chart.register({id:'customCanvasBackgroundColor',beforeDraw:(c)=>{const ctx=c.canvas.getContext('2d');ctx.save();ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);ctx.restore();}});
     Chart.defaults.font.family="'Inter',sans-serif"; Chart.defaults.font.weight='bold'; Chart.defaults.color='#1f2937';
     window.allCharts=[]; window.data_m={}; window.fechas_m=[]; window.cGen=null;
 
     const DICT = {
         'tc_minorista':{l:'T.C. Minorista (ARS/USD)', cD:true},'tc_mayorista':{l:'T.C. Mayorista (ARS/USD)', cD:true},'dolar_mep':{l:'Dólar MEP (ARS/USD)', cD:true},'dolar_blue':{l:'Dólar Blue (ARS/USD)', cD:true},'brecha_mep':{l:'Brecha MEP (%)', cD:false},'brecha_blue':{l:'Brecha Blue (%)', cD:false},
-        'itcrm':{l:'ITCRM General', cD:false},'tcr_brasil':{l:'TCR Brasil', cD:false},'tcr_usa':{l:'TCR EE.UU.', cD:false},'tcr_zona_euro':{l:'TCR Euro', cD:false},'tcr_china':{l:'TCR China', cD:false},'tcr_mexico':{l:'TCR México', cD:false},'tcr_chile':{l:'TCR Chile', cD:false},'tcr_uruguay':{l:'TCR Uruguay', cD:false},
+        'itcrm':{l:'ITCRM General (Base 100)', cD:false},'tcr_brasil':{l:'TCR Brasil', cD:false},'tcr_usa':{l:'TCR EE.UU.', cD:false},'tcr_zona_euro':{l:'TCR Euro', cD:false},'tcr_china':{l:'TCR China', cD:false},'tcr_mexico':{l:'TCR México', cD:false},'tcr_chile':{l:'TCR Chile', cD:false},'tcr_uruguay':{l:'TCR Uruguay', cD:false},
         'base_monetaria':{l:'Base Monetaria', cD:true},'circulacion_monetaria':{l:'Circulación Monetaria', cD:true},'billetes_monedas':{l:'Billetes Público', cD:true},'m2':{l:'M2 Total', cD:true},'m2_transaccional':{l:'M2 Transaccional', cD:true},'pases_pasivos':{l:'Pases Pasivos', cD:true},'lefi':{l:'LEFI', cD:true},
         'tarjetas':{l:'Préstamos: Tarjetas', cD:true},'personales':{l:'Préstamos: Personales', cD:true},'hipotecarios':{l:'Préstamos: Hipotecarios', cD:true},'prendarios':{l:'Préstamos: Prendarios', cD:true},'plazo_fijo':{l:'Depósitos: Plazo Fijo', cD:true},'ca':{l:'Cajas Ahorro', cD:true},'cc':{l:'Cuentas Ctes', cD:true},
         'depositos_usd':{l:'Depósitos (USD)', cD:false},'prestamos_usd':{l:'Préstamos (USD)', cD:false},'reservas':{l:'Reservas (USD)', cD:false},'compra_divisas':{l:'Compras BCRA (USD)', cD:false},'tc_mayorista_var':{l:'Devaluación (%)', cD:false},'ipc_mensual':{l:'IPC Mensual (%)', cD:false},'ipc_interanual':{l:'IPC Interanual (%)', cD:false},'rem_interanual':{l:'REM 12m (%)', cD:false},
         'tasa_politica_tea':{l:'Tasa Política (TEA %)', cD:false},'badlar_tea':{l:'BADLAR (TEA %)', cD:false},'tamar_tea':{l:'TAMAR (TEA %)', cD:false}
     };
 
+    // Función para alternar el modo Celular/PC
+    function setMode(mode) {
+        if(mode === 'mobile') {
+            document.body.classList.add('mobile-mode');
+            document.getElementById('btnMobile').classList.add('active');
+            document.getElementById('btnDesktop').classList.remove('active');
+        } else {
+            document.body.classList.remove('mobile-mode');
+            document.getElementById('btnDesktop').classList.add('active');
+            document.getElementById('btnMobile').classList.remove('active');
+        }
+        window.allCharts.forEach(c => c.resize());
+    }
+
     function verTab(e,id){ document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); window.allCharts.forEach(c=>c.update()); }
+    
     function filtrarTexto(){
         let s=document.getElementById('dateStart').value.trim(), e=document.getElementById('dateEnd').value.trim(), st=window.fechas_m[0], en=window.fechas_m[window.fechas_m.length-1];
         if(/^\d{4}-\d{2}$/.test(s)) st=window.fechas_m.find(f=>f>=s)||st; if(/^\d{4}-\d{2}$/.test(e)) en=[...window.fechas_m].reverse().find(f=>f<=e)||en;
