@@ -1,34 +1,44 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dashboard Monetario CEER</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>
 :root{--ceer-blue:#1e3a8a;--gray-100:#f3f4f6;--gray-300:#d1d5db;--gray-800:#374151;--gray-900:#111827;}
-body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(--gray-900);margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(--gray-900);margin:0;padding:0;overflow-x:hidden;}
 .header{background-color:var(--ceer-blue);color:white;padding:2rem;text-align:center;}
 .container{max-width:1400px;margin:0 auto;padding:2rem;}
-.tabs-header{display:flex;gap:1rem;border-bottom:2px solid var(--gray-300);margin-bottom:2rem;overflow-x:auto;}
-.tab-btn{background:none;border:none;padding:1rem 2rem;font-size:1.05rem;font-weight:700;color:#6b7280;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.3s ease;}
+.tabs-header{display:flex;gap:1rem;border-bottom:2px solid var(--gray-300);margin-bottom:2rem;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:5px;}
+.tab-btn{background:none;border:none;padding:1rem;font-size:1.05rem;font-weight:700;color:#6b7280;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.3s ease;white-space:nowrap;}
 .tab-btn:hover,.tab-btn.active{color:var(--ceer-blue);border-bottom-color:var(--ceer-blue);}
 .tab-content{display:none;animation:fadeIn 0.4s ease;} .tab-content.active{display:block;}
-.time-filters{display:flex;justify-content:center;align-items:center;gap:1.5rem;margin-bottom:2rem;background:white;padding:1rem;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);}
+.time-filters{display:flex;justify-content:center;align-items:center;gap:1.5rem;margin-bottom:2rem;background:white;padding:1rem;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);flex-wrap:wrap;}
+.date-input-group{display:flex;align-items:center;gap:0.5rem;font-weight:600;color:var(--gray-800);}
 .date-input{border:2px solid var(--gray-300);border-radius:6px;padding:0.6rem 1rem;font-weight:700;outline:none;width:110px;text-align:center;} .date-input:focus{border-color:var(--ceer-blue);}
 .btn-action{background:var(--ceer-blue);color:white;border:none;padding:0.7rem 1.5rem;border-radius:6px;font-weight:bold;cursor:pointer;} .btn-action:hover{background:#172554;}
 .generator-panel{background:white;border-radius:8px;padding:2rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);margin-bottom:2rem;}
+.gen-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;font-weight:700;font-size:1.1rem;flex-wrap:wrap;}
 .gen-vars-container{display:grid;grid-template-columns:1fr 1fr;gap:2rem;} .gen-var-box{background:var(--gray-100);padding:1.5rem;border-radius:8px;border:1px solid var(--gray-300);}
 .gen-control-group{margin-bottom:1rem;display:flex;flex-direction:column;gap:0.4rem;} .gen-select{padding:0.6rem;border-radius:6px;border:1px solid var(--gray-300);}
-.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(600px, 1fr));gap:2rem;} .chart-card{background:white;border-radius:8px;padding:1.5rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
-/* Estilos nuevos para los encabezados con botones */
-.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;border-bottom:2px solid var(--gray-100);padding-bottom:0.5rem;}
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px, 1fr));gap:2rem;} .chart-card{background:white;border-radius:8px;padding:1.5rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;border-bottom:2px solid var(--gray-100);padding-bottom:0.5rem;gap:1rem;}
 .chart-title{font-size:1.15rem;font-weight:800;color:var(--ceer-blue);margin:0;}
-.card-tools{display:flex;gap:0.5rem;}
-.card-tools button{background:var(--gray-100);border:1px solid var(--gray-300);color:var(--ceer-blue);border-radius:4px;padding:0.4rem 0.6rem;cursor:pointer;transition:0.2s;}
-.card-tools button:hover{background:var(--ceer-blue);color:white;border-color:var(--ceer-blue);}
+.card-tools{display:flex;gap:0.5rem;} .card-tools button{background:var(--gray-100);border:1px solid var(--gray-300);color:var(--ceer-blue);border-radius:4px;padding:0.4rem 0.6rem;cursor:pointer;} .card-tools button:hover{background:var(--ceer-blue);color:white;}
 .chart-container{position:relative;height:400px;width:100%;} @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* OPTIMIZACIÓN MOBILE */
+@media (max-width: 768px) {
+    .header { padding: 1.5rem 1rem; }
+    .container { padding: 1rem; }
+    .gen-vars-container { grid-template-columns: 1fr; gap: 1rem; }
+    .time-filters { flex-direction: column; gap: 1rem; }
+    .card-header { flex-direction: column; }
+    .chart-container { height: 300px; }
+    .generator-panel { padding: 1rem; }
+}
 </style></head><body>
 
-<div class="header"><h1 style="font-weight:800;margin:0 0 0.5rem 0;">Dashboard Monetario Avanzado</h1><p style="font-weight:600;margin:0;">Análisis histórico interactivo alimentado por BCRA</p></div>
+<div class="header"><h1 style="font-weight:800;margin:0 0 0.5rem 0;font-size:1.5rem;">Dashboard Monetario Avanzado</h1><p style="font-weight:600;margin:0;font-size:0.9rem;">Análisis histórico interactivo alimentado por BCRA</p></div>
 
 <div class="container">
     <div class="time-filters">
-        <label>Desde: <input type="text" id="dateStart" class="date-input" placeholder="2018-05" maxlength="7" onkeyup="filtrarTexto()"></label>
-        <label>Hasta: <input type="text" id="dateEnd" class="date-input" placeholder="2024-12" maxlength="7" onkeyup="filtrarTexto()"></label>
+        <div class="date-input-group"><label>Desde:</label><input type="text" id="dateStart" class="date-input" placeholder="2018-05" maxlength="7" onkeyup="filtrarTexto()"></div>
+        <div class="date-input-group"><label>Hasta:</label><input type="text" id="dateEnd" class="date-input" placeholder="2024-12" maxlength="7" onkeyup="filtrarTexto()"></div>
         <button class="btn-action" onclick="document.getElementById('dateStart').value='';document.getElementById('dateEnd').value='';filtrarTexto()"><i class="fas fa-undo"></i> Reset</button>
     </div>
 
@@ -40,58 +50,46 @@ body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(-
     </div>
 
     <div id="bancarias" class="tab-content active"><div class="chart-grid">
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Préstamos Privados (Millones ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartPrestamos')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartPrestamos')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartPrestamos"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Depósitos Privados (Millones ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartDepositos')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDepositos')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
-        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Préstamos vs Depósitos Privados (Millones USD)</h3><div class="card-tools"><button onclick="dlPNG('chartUSD')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartUSD')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartUSD"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Préstamos Privados (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartPrestamos')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartPrestamos')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartPrestamos"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Depósitos Privados (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartDepositos')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDepositos')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDepositos"></canvas></div></div>
+        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Préstamos vs Depósitos (Millones USD)</h3><div class="card-tools"><button onclick="dlPNG('chartUSD')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartUSD')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartUSD"></canvas></div></div>
     </div></div>
 
     <div id="macro" class="tab-content"><div class="chart-grid">
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tipo de Cambio Real Multilateral (General Base 100)</h3><div class="card-tools"><button onclick="dlPNG('chartITCRM')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartITCRM')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartITCRM"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Reservas vs. Compra de Divisas BCRA (Millones USD)</h3><div class="card-tools"><button onclick="dlPNG('chartReservas')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartReservas')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartReservas"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Carrera Nominal: Devaluación Mayorista vs Inflación (%)</h3><div class="card-tools"><button onclick="dlPNG('chartCarrera')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartCarrera')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartCarrera"></canvas></div></div>
-        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Expectativas: IPC Real vs Proyección REM 12m</h3><div class="card-tools"><button onclick="dlPNG('chartIPC')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartIPC')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartIPC"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tipo de Cambio Real (General Base 100)</h3><div class="card-tools"><button onclick="dlPNG('chartITCRM')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartITCRM')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartITCRM"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Reservas vs. Compras BCRA (M. USD)</h3><div class="card-tools"><button onclick="dlPNG('chartReservas')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartReservas')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartReservas"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Devaluación Mayorista vs Inflación (%)</h3><div class="card-tools"><button onclick="dlPNG('chartCarrera')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartCarrera')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartCarrera"></canvas></div></div>
+        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Expectativas: IPC Real vs Proy. REM 12m</h3><div class="card-tools"><button onclick="dlPNG('chartIPC')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartIPC')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartIPC"></canvas></div></div>
     </div></div>
 
     <div id="monetarias" class="tab-content"><div class="chart-grid">
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Agregados: Base Monetaria vs M2 (Millones ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartAgregados')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartAgregados')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartAgregados"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Mapa de Tasas TEA vs IPC Mensual</h3><div class="card-tools"><button onclick="dlPNG('chartTasas')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartTasas')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartTasas"></canvas></div></div>
-        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Seguimiento Diario de Tasas (Último Año Hábil)</h3><div class="card-tools"><button onclick="dlPNG('chartDiario')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDiario')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDiario"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Base Monetaria vs M2 (ARS Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartAgregados')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartAgregados')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartAgregados"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Mapa de Tasas TEA vs IPC Mensual</h3><div class="card-tools"><button onclick="dlPNG('chartTasas')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartTasas')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartTasas"></canvas></div></div>
+        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Seguimiento Diario Tasas (Último Año)</h3><div class="card-tools"><button onclick="dlPNG('chartDiario')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDiario')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDiario"></canvas></div></div>
     </div></div>
 
     <div id="generador" class="tab-content">
         <div class="generator-panel">
-            <div class="gen-header"><span>Variables: </span><label><input type="radio" name="numVars" value="1" checked onchange="document.getElementById('panelVar2').style.opacity=this.checked?0.5:1;document.getElementById('panelVar2').style.pointerEvents=this.checked?'none':'auto'"> 1</label>&nbsp;<label><input type="radio" name="numVars" value="2" onchange="document.getElementById('panelVar2').style.opacity=1;document.getElementById('panelVar2').style.pointerEvents='auto'"> 2 (Versus)</label></div>
+            <div class="gen-header"><span>Variables: </span><label><input type="radio" name="numVars" value="1" checked onchange="document.getElementById('panelVar2').style.opacity=this.checked?0.5:1;document.getElementById('panelVar2').style.pointerEvents=this.checked?'none':'auto'"> 1</label>&nbsp;&nbsp;<label><input type="radio" name="numVars" value="2" onchange="document.getElementById('panelVar2').style.opacity=1;document.getElementById('panelVar2').style.pointerEvents='auto'"> 2 (Versus)</label></div>
             <div class="gen-vars-container">
-                <div class="gen-var-box"><h4 style="margin:0 0 1rem 0;color:var(--ceer-blue);">Variable 1</h4><div class="gen-control-group"><label>Métrica:</label><select id="genSelect1" class="gen-select" onchange="chkDef(1)"></select></div><div class="gen-control-group"><label>Gráfico:</label><select id="genType1" class="gen-select"><option value="line">Línea</option><option value="area">Área</option><option value="bar">Barras</option></select></div><div class="gen-control-group"><label>Nominalidad:</label><select id="genNom1" class="gen-select"><option value="constante">Precios Constantes (Reales)</option><option value="corriente">Precios Corrientes (Nominales)</option></select></div></div>
-                <div class="gen-var-box" id="panelVar2" style="opacity:0.5;pointer-events:none;"><h4 style="margin:0 0 1rem 0;color:var(--ceer-blue);">Variable 2</h4><div class="gen-control-group"><label>Métrica:</label><select id="genSelect2" class="gen-select" onchange="chkDef(2)"></select></div><div class="gen-control-group"><label>Gráfico:</label><select id="genType2" class="gen-select"><option value="line">Línea</option><option value="area">Área</option><option value="bar">Barras</option></select></div><div class="gen-control-group"><label>Nominalidad:</label><select id="genNom2" class="gen-select"><option value="constante">Precios Constantes (Reales)</option><option value="corriente">Precios Corrientes (Nominales)</option></select></div><label style="margin-top:1rem;display:flex;gap:0.5rem;"><input type="checkbox" id="genAxis2" checked> Eje Secundario</label></div>
+                <div class="gen-var-box"><h4 style="margin:0 0 1rem 0;color:var(--ceer-blue);">Variable 1</h4><div class="gen-control-group"><label>Métrica:</label><select id="genSelect1" class="gen-select" onchange="chkDef(1)"></select></div><div class="gen-control-group"><label>Gráfico:</label><select id="genType1" class="gen-select"><option value="line">Línea</option><option value="area">Área</option><option value="bar">Barras</option></select></div><div class="gen-control-group"><label>Nominalidad:</label><select id="genNom1" class="gen-select"><option value="constante">Constantes (Reales)</option><option value="corriente">Corrientes (Nominales)</option></select></div></div>
+                <div class="gen-var-box" id="panelVar2" style="opacity:0.5;pointer-events:none;"><h4 style="margin:0 0 1rem 0;color:var(--ceer-blue);">Variable 2</h4><div class="gen-control-group"><label>Métrica:</label><select id="genSelect2" class="gen-select" onchange="chkDef(2)"></select></div><div class="gen-control-group"><label>Gráfico:</label><select id="genType2" class="gen-select"><option value="line">Línea</option><option value="area">Área</option><option value="bar">Barras</option></select></div><div class="gen-control-group"><label>Nominalidad:</label><select id="genNom2" class="gen-select"><option value="constante">Constantes (Reales)</option><option value="corriente">Corrientes (Nominales)</option></select></div><label style="margin-top:1rem;display:flex;gap:0.5rem;"><input type="checkbox" id="genAxis2" checked> Eje Secundario</label></div>
             </div>
-            <button class="btn-action" style="width:100%;margin-top:1.5rem;background:#10b981;" onclick="crearGen()"><i class="fas fa-chart-pie"></i> Dibujar Gráfico</button>
+            <button class="btn-action" style="width:100%;margin-top:1.5rem;background:#10b981;" onclick="crearGen()"><i class="fas fa-chart-pie"></i> Dibujar Gráfico Personalizado</button>
         </div>
-        <div class="chart-card" id="resultadoGenerador" style="display:none;">
-            <div class="card-header"><h3 class="chart-title">Resultado Analítico</h3><div class="card-tools"><button onclick="dlPNG('chartGenerador')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartGenerador')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div>
-            <div class="chart-container"><canvas id="chartGenerador"></canvas></div>
-        </div>
+        <div class="chart-card" id="resultadoGenerador" style="display:none;"><div class="card-header"><h3 class="chart-title">Resultado Analítico</h3><div class="card-tools"><button onclick="dlPNG('chartGenerador')"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartGenerador')"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartGenerador"></canvas></div></div>
     </div>
 </div>
 
 <script>
-    // Plugin mágico para que los PNGs salgan con fondo blanco y no transparentes (negros)
-    Chart.register({
-        id: 'customCanvasBackgroundColor',
-        beforeDraw: (chart) => {
-            const ctx = chart.canvas.getContext('2d');
-            ctx.save(); ctx.globalCompositeOperation = 'destination-over'; ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, chart.width, chart.height); ctx.restore();
-        }
-    });
-
+    Chart.register({id:'customCanvasBackgroundColor',beforeDraw:(c)=>{const ctx=c.canvas.getContext('2d');ctx.save();ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);ctx.restore();}});
     Chart.defaults.font.family="'Inter',sans-serif"; Chart.defaults.font.weight='bold'; Chart.defaults.color='#1f2937';
     window.allCharts=[]; window.data_m={}; window.fechas_m=[]; window.cGen=null;
 
     const DICT = {
         'tc_minorista':{l:'T.C. Minorista (ARS/USD)', cD:true},'tc_mayorista':{l:'T.C. Mayorista (ARS/USD)', cD:true},'dolar_mep':{l:'Dólar MEP (ARS/USD)', cD:true},'dolar_blue':{l:'Dólar Blue (ARS/USD)', cD:true},'brecha_mep':{l:'Brecha MEP (%)', cD:false},'brecha_blue':{l:'Brecha Blue (%)', cD:false},
-        'itcrm':{l:'ITCRM General', cD:false},'tcr_brasil':{l:'TCR Brasil', cD:false},'tcr_usa':{l:'TCR EE.UU.', cD:false},'tcr_zona_euro':{l:'TCR Euro', cD:false},'tcr_china':{l:'TCR China', cD:false},'tcr_mexico':{l:'TCR México', cD:false},'tcr_chile':{l:'TCR Chile', cD:false},'tcr_uruguay':{l:'TCR Uruguay', cD:false},
+        'itcrm':{l:'ITCRM General (Base 100)', cD:false},'tcr_brasil':{l:'TCR Brasil', cD:false},'tcr_usa':{l:'TCR EE.UU.', cD:false},'tcr_zona_euro':{l:'TCR Euro', cD:false},'tcr_china':{l:'TCR China', cD:false},'tcr_mexico':{l:'TCR México', cD:false},'tcr_chile':{l:'TCR Chile', cD:false},'tcr_uruguay':{l:'TCR Uruguay', cD:false},
         'base_monetaria':{l:'Base Monetaria', cD:true},'circulacion_monetaria':{l:'Circulación Monetaria', cD:true},'billetes_monedas':{l:'Billetes Público', cD:true},'m2':{l:'M2 Total', cD:true},'m2_transaccional':{l:'M2 Transaccional', cD:true},'pases_pasivos':{l:'Pases Pasivos', cD:true},'lefi':{l:'LEFI', cD:true},
         'tarjetas':{l:'Préstamos: Tarjetas', cD:true},'personales':{l:'Préstamos: Personales', cD:true},'hipotecarios':{l:'Préstamos: Hipotecarios', cD:true},'prendarios':{l:'Préstamos: Prendarios', cD:true},'plazo_fijo':{l:'Depósitos: Plazo Fijo', cD:true},'ca':{l:'Cajas Ahorro', cD:true},'cc':{l:'Cuentas Ctes', cD:true},
         'depositos_usd':{l:'Depósitos (USD)', cD:false},'prestamos_usd':{l:'Préstamos (USD)', cD:false},'reservas':{l:'Reservas (USD)', cD:false},'compra_divisas':{l:'Compras BCRA (USD)', cD:false},'tc_mayorista_var':{l:'Devaluación (%)', cD:false},'ipc_mensual':{l:'IPC Mensual (%)', cD:false},'ipc_interanual':{l:'IPC Interanual (%)', cD:false},'rem_interanual':{l:'REM 12m (%)', cD:false},
@@ -99,15 +97,11 @@ body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(-
     };
 
     function verTab(e,id){ document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active'); window.allCharts.forEach(c=>c.update()); }
-    
     function filtrarTexto(){
-        let s = document.getElementById('dateStart').value.trim(), e = document.getElementById('dateEnd').value.trim();
-        let st = window.fechas_m[0], en = window.fechas_m[window.fechas_m.length-1];
-        if(/^\d{4}-\d{2}$/.test(s)) st = window.fechas_m.find(f=>f>=s) || st;
-        if(/^\d{4}-\d{2}$/.test(e)) en = [...window.fechas_m].reverse().find(f=>f<=e) || en;
-        window.allCharts.forEach(c=>{ if(c.canvas.id!=='chartDiario' && c.options.scales.x){ c.options.scales.x.min=st; c.options.scales.x.max=en; c.update(); } });
+        let s=document.getElementById('dateStart').value.trim(), e=document.getElementById('dateEnd').value.trim(), st=window.fechas_m[0], en=window.fechas_m[window.fechas_m.length-1];
+        if(/^\d{4}-\d{2}$/.test(s)) st=window.fechas_m.find(f=>f>=s)||st; if(/^\d{4}-\d{2}$/.test(e)) en=[...window.fechas_m].reverse().find(f=>f<=e)||en;
+        window.allCharts.forEach(c=>{if(c.canvas.id!=='chartDiario'&&c.options.scales.x){c.options.scales.x.min=st;c.options.scales.x.max=en;c.update();}});
     }
-
     function initGen(){ [1,2].forEach(i=>{ const sel=document.getElementById(`genSelect${i}`); for(let k in DICT) sel.appendChild(new Option(DICT[k].l, k)); chkDef(i); }); }
     function chkDef(n){ document.getElementById(`genNom${n}`).disabled = !DICT[document.getElementById(`genSelect${n}`).value].cD; }
 
@@ -122,80 +116,41 @@ body{font-family:'Inter',sans-serif;background-color:var(--gray-100);color:var(-
             d.push({label:d2.l, data:d2.d, borderColor:'#ef4444', backgroundColor:d2.t!=='line'?'rgba(239,68,68,0.4)':null, type:d2.t==='area'?'line':d2.t, fill:d2.t==='area', borderWidth:3, yAxisID:u2?'y1':'y'});
             if(u2) y1={type:'linear',position:'right',grid:{display:false},border:{display:false},ticks:{font:{weight:'bold'}}};
         }
-        window.cGen = buildC('chartGenerador', d, {y1:y1});
-        filtrarTexto(); document.getElementById('resultadoGenerador').scrollIntoView({behavior:'smooth'});
+        window.cGen = buildC('chartGenerador', d, {y1:y1}); filtrarTexto(); document.getElementById('resultadoGenerador').scrollIntoView({behavior:'smooth'});
     }
 
-    // Constructor Maestro de Gráficos (Acá incrustamos la FUENTE de agua)
     function buildC(id, datasets, extraScales={}, stacked=false){
-        let s={x:{grid:{display:false},ticks:{maxRotation:45,minRotation:45,autoSkip:true,maxTicksLimit:15}}, y:{grid:{display:false},border:{display:false},stacked:stacked}};
-        Object.assign(s, extraScales);
-        let c = new Chart(document.getElementById(id).getContext('2d'), { 
-            type:'line', 
-            data:{labels:id==='chartDiario'?window.fechas_d:window.fechas_m, datasets:datasets}, 
-            options:{
-                responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, spanGaps:true, 
-                elements:{point:{radius:0,hitRadius:10,hoverRadius:6}}, scales:s, 
-                plugins:{
-                    tooltip:{backgroundColor:'rgba(15,23,42,0.9)',padding:12},
-                    // LA MARCA DE AGUA
-                    subtitle: { display: true, text: 'Fuente: CEER en base a BCRA', position: 'bottom', align: 'end', font: { style: 'italic', size: 11, color: '#6b7280' }, padding: { top: 10 } }
-                } 
-            } 
-        });
+        let s={x:{grid:{display:false},ticks:{maxRotation:45,minRotation:45,autoSkip:true,maxTicksLimit:15}}, y:{grid:{display:false},border:{display:false},stacked:stacked}}; Object.assign(s, extraScales);
+        let c = new Chart(document.getElementById(id).getContext('2d'), { type:'line', data:{labels:id==='chartDiario'?window.fechas_d:window.fechas_m, datasets:datasets}, options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},spanGaps:true,elements:{point:{radius:0,hitRadius:10,hoverRadius:6}},scales:s,plugins:{tooltip:{backgroundColor:'rgba(15,23,42,0.9)',padding:12},subtitle:{display:true,text:'Fuente: CEER en base a BCRA',position:'bottom',align:'end',font:{style:'italic',size:11,color:'#6b7280'},padding:{top:10}}}}});
         window.allCharts.push(c); return c;
     }
 
-    // Funciones de Descarga
-    function dlPNG(id){
-        const a = document.createElement('a');
-        a.href = document.getElementById(id).toDataURL('image/png');
-        a.download = id + '_ceer.png'; a.click();
-    }
-
+    function dlPNG(id){ const a=document.createElement('a'); a.href=document.getElementById(id).toDataURL('image/png'); a.download=id+'_ceer.png'; a.click(); }
     function dlCSV(id){
-        const chart = Chart.getChart(id); if(!chart) return;
-        const labels = chart.data.labels; const datasets = chart.data.datasets;
-        let minStr = chart.options.scales.x.min, maxStr = chart.options.scales.x.max;
-        
-        // Recorta el CSV según lo que estés viendo en pantalla
-        let sIdx = minStr ? labels.findIndex(l => l >= minStr) : 0;
-        let eIdx = maxStr ? labels.findLastIndex(l => l <= maxStr) : labels.length - 1;
-        if(sIdx===-1) sIdx=0; if(eIdx===-1) eIdx=labels.length-1;
-
-        let csv = 'Fecha'; datasets.forEach(ds => csv += ',"' + ds.label + '"'); csv += '\n';
-        for(let i=sIdx; i<=eIdx; i++){
-            csv += labels[i];
-            datasets.forEach(ds => { let v = ds.data[i]; csv += ',' + (v !== null && v !== undefined ? v : ''); });
-            csv += '\n';
-        }
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        a.download = id + '_ceer.csv'; a.click();
+        const c=Chart.getChart(id); if(!c) return; const l=c.data.labels, d=c.data.datasets;
+        let sI=c.options.scales.x.min?l.findIndex(x=>x>=c.options.scales.x.min):0, eI=c.options.scales.x.max?l.findLastIndex(x=>x<=c.options.scales.x.max):l.length-1;
+        if(sI===-1) sI=0; if(eI===-1) eI=l.length-1;
+        let csv='Fecha'; d.forEach(x=>csv+=`,"${x.label}"`); csv+='\n';
+        for(let i=sI;i<=eI;i++){ csv+=l[i]; d.forEach(x=>{let v=x.data[i]; csv+=','+(v!==null&&v!==undefined?v:'');}); csv+='\n'; }
+        const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download=id+'_ceer.csv'; a.click();
     }
 
     async function load(){
-        const res = await fetch(`datos_historicos.json?v=${new Date().getTime()}`);
-        const raw = JSON.parse((await res.text()).replace(/NaN/g, "null"));
-        window.fechas_m=raw.mensual.fecha||[]; window.fechas_d=raw.diario.fecha||[];
-        const cln = (a)=>a?a.map(v=>v===null?null:Number(v)):[];
-        for(let k in raw.mensual) window.data_m[k]=cln(raw.mensual[k]);
-        const m=(k)=>window.data_m[k]||[]; const d=(k)=>cln(raw.diario[k]);
+        const res = await fetch(`datos_historicos.json?v=${new Date().getTime()}`); const raw = JSON.parse((await res.text()).replace(/NaN/g, "null"));
+        window.fechas_m=raw.mensual.fecha||[]; window.fechas_d=raw.diario.fecha||[]; const cln=(a)=>a?a.map(v=>v===null?null:Number(v)):[];
+        for(let k in raw.mensual) window.data_m[k]=cln(raw.mensual[k]); const m=(k)=>window.data_m[k]||[]; const d=(k)=>cln(raw.diario[k]);
 
         buildC('chartPrestamos', [{label:'Tarjetas',data:m('tarjetas'),backgroundColor:'#93c5fd',fill:true,stacked:true},{label:'Personales',data:m('personales'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Hipotecarios',data:m('hipotecarios'),backgroundColor:'#2563eb',fill:true,stacked:true},{label:'Prendarios',data:m('prendarios'),backgroundColor:'#1e3a8a',fill:true,stacked:true}], {}, true);
         buildC('chartDepositos', [{label:'Plazo Fijo',data:m('plazo_fijo'),backgroundColor:'#1e3a8a',fill:true,stacked:true},{label:'Cajas Ahorro',data:m('ca'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Cuentas Ctes',data:m('cc'),backgroundColor:'#93c5fd',fill:true,stacked:true}], {}, true);
         buildC('chartUSD', [{label:'Depósitos (USD)',data:m('depositos_usd'),borderColor:'#10b981',borderWidth:3},{label:'Préstamos (USD)',data:m('prestamos_usd'),borderColor:'#1e3a8a',borderWidth:3}]);
-        
         buildC('chartBrecha', [{label:'Brecha Blue (%)',data:m('brecha_blue'),backgroundColor:'rgba(37,99,235,0.25)',borderColor:'#2563eb',fill:true,yAxisID:'y1',borderWidth:2},{label:'Brecha MEP (%)',data:m('brecha_mep'),backgroundColor:'rgba(16,185,129,0.25)',borderColor:'#10b981',fill:true,yAxisID:'y1',borderWidth:2}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
         buildC('chartITCRM', [{label:'ITCRM General',data:m('itcrm'),borderColor:'#1e3a8a',borderWidth:3}]);
         buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:'#1e3a8a',yAxisID:'y',borderWidth:3},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:(c)=>c.raw<0?'#ef4444':'#10b981'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
         buildC('chartCarrera', [{label:'Devaluación (%)',data:m('tc_mayorista_var'),borderColor:'#2563eb',borderWidth:3},{label:'IPC (%)',data:m('ipc_mensual'),borderColor:'#ef4444',borderWidth:3}]);
         buildC('chartIPC', [{label:'IPC Interanual',data:m('ipc_interanual'),borderColor:'#ef4444',borderWidth:3},{label:'REM 12m',data:m('rem_interanual'),borderColor:'#1e3a8a',borderDash:[5,5],borderWidth:3}]);
-        
         buildC('chartAgregados', [{label:'M2',data:m('m2'),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.2)',fill:true,borderWidth:3},{label:'Base Monetaria',data:m('base_monetaria'),borderColor:'#1e3a8a',backgroundColor:'rgba(30,58,138,0.2)',fill:true,borderWidth:3}]);
         buildC('chartTasas', [{label:'Tasa Política',data:m('tasa_politica_tea'),borderColor:'#1e3a8a',borderWidth:3,yAxisID:'y'},{label:'BADLAR',data:m('badlar_tea'),borderColor:'#2563eb',borderWidth:3,yAxisID:'y'},{label:'IPC Mensual',data:m('ipc_mensual'),backgroundColor:'rgba(239,68,68,0.15)',type:'bar',yAxisID:'y1'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
         buildC('chartDiario', [{label:'BADLAR',data:d('badlar_tea'),borderColor:'#2563eb',borderWidth:2},{label:'TAMAR',data:d('tamar_tea'),borderColor:'#3b82f6',borderWidth:2}]);
-
         initGen();
     }
     document.addEventListener('DOMContentLoaded', load);
