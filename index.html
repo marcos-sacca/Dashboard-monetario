@@ -196,14 +196,14 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
             return { isBanda: false, l: DICT[v].l + (DICT[v].cD && quiereCorriente?' (Nominal)':''), d: dataFinal, t: document.getElementById(`genType${n}`).value }; 
         };
         
-        let usaFRED = false;
-        if(DICT[v1_val].isU && document.getElementById('genNom1').value === 'constante') usaFRED = true;
+        let usaBLS = false;
+        if(DICT[v1_val].isU && document.getElementById('genNom1').value === 'constante') usaBLS = true;
         if(document.querySelector('input[name="numVars"]:checked').value==='2'){
             let v2_val = document.getElementById('genSelect2').value;
-            if(DICT[v2_val].isU && document.getElementById('genNom2').value === 'constante') usaFRED = true;
+            if(DICT[v2_val].isU && document.getElementById('genNom2').value === 'constante') usaBLS = true;
         }
         
-        let fuenteSTR = 'Fuente: CEER en base a BCRA' + (usaFRED ? ' y FRED/TradingEconomics' : '');
+        let fuenteSTR = 'Fuente: CEER en base a BCRA' + (usaBLS ? ' y BLS/TradingEconomics' : '');
         let isSc = document.getElementById('genModo').value === 'scatter';
         let d1 = getD(1);
         
@@ -305,7 +305,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         
         buildC('chartBrecha', [{label:'Brecha Blue (%)',data:m('brecha_blue'),backgroundColor:'rgba(37,99,235,0.25)',borderColor:'#2563eb',fill:true,yAxisID:'y1',borderWidth:2},{label:'Brecha MEP (%)',data:m('brecha_mep'),backgroundColor:'rgba(16,185,129,0.25)',borderColor:'#10b981',fill:true,yAxisID:'y1',borderWidth:2}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
         buildC('chartITCRM', [{label:'ITCRM General',data:m('itcrm'),borderColor:'#1e3a8a',borderWidth:3}]);
-        buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:'#1e3a8a',yAxisID:'y',borderWidth:3},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:(c)=>c.raw<0?'#ef4444':'#10b981'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y FRED');
+        buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:'#1e3a8a',yAxisID:'y',borderWidth:3},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:(c)=>c.raw<0?'#ef4444':'#10b981'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y BLS');
         buildC('chartCarrera', [{label:'Devaluación (%)',data:m('tc_mayorista_var'),borderColor:'#2563eb',borderWidth:3},{label:'IPC (%)',data:m('ipc_mensual'),borderColor:'#ef4444',borderWidth:3}]);
         buildC('chartIPC', [{label:'IPC Interanual',data:m('ipc_interanual'),borderColor:'#ef4444',borderWidth:3},{label:'REM 12m',data:m('rem_interanual'),borderColor:'#1e3a8a',borderDash:[5,5],borderWidth:3}]);
         
