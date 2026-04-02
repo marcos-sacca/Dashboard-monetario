@@ -126,15 +126,12 @@ def fetch_bandas_cambiarias():
     print("Procesando Bandas Cambiarias del BCRA...")
     df_final = pd.DataFrame(columns=['fecha', 'banda_inferior', 'banda_superior'])
     
-    # 1. Archivo histórico 2025 de descargas (Escaneo inteligente de filas)
     archivo_2025 = r"C:\Users\Sofia\Downloads\serie-completa-bandas-cambiarias-2025.xlsx"
             
     if os.path.exists(archivo_2025):
         print(f"  -> Integrando datos de bandas de 2025 desde archivo local...")
         try:
-            # Leemos las primeras 20 filas sin encabezados para buscar dónde empieza la tabla real
             df_raw = pd.read_excel(archivo_2025, header=None, nrows=20)
-            
             header_idx = 0
             for i, row in df_raw.iterrows():
                 row_str = " ".join([str(x).lower() for x in row.values])
@@ -142,9 +139,7 @@ def fetch_bandas_cambiarias():
                     header_idx = i
                     break
             
-            # Ahora sí, leemos el archivo usando esa fila exacta como los verdaderos nombres de columna
             df_25 = pd.read_excel(archivo_2025, header=header_idx)
-
             col_map = {}
             for c in df_25.columns:
                 c_str = str(c).strip().lower()
@@ -158,8 +153,6 @@ def fetch_bandas_cambiarias():
                 df_25['fecha'] = pd.to_datetime(df_25['fecha'], errors='coerce')
                 for col in ['banda_inferior', 'banda_superior']:
                     if col in df_25.columns:
-                        # Si viene como texto con coma decimal (1000,50), la reemplazamos por punto.
-                        # Ya no borramos los puntos para evitar dañar los formatos internacionales (999.67).
                         if df_25[col].dtype == 'object':
                             df_25[col] = df_25[col].astype(str).str.replace(',', '.', regex=False)
                         df_25[col] = pd.to_numeric(df_25[col], errors='coerce')
@@ -168,7 +161,6 @@ def fetch_bandas_cambiarias():
         except Exception as e:
             print(f"  -> Error procesando archivo 2025: {e}")
 
-    # 2. Descargar datos actuales
     try:
         print("  -> Scrapeando bandas actuales de la web del BCRA...")
         url_excel = "https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/serie-completa-bandas-cambiarias.xlsx"
@@ -238,11 +230,54 @@ def fetch_bcra_history(id_var, nombre, is_daily=False):
         df_acumulado['fecha'] = df_acumulado['periodo'].dt.strftime('%Y-%m')
         return df_acumulado[['fecha', nombre]]
 
+def fetch_argenstats(endpoint, nombre_columna):
+    print(f"Descargando de ArgenStats: {endpoint}...")
+    api_key = os.environ.get('ARGENSTATS_API_KEY')
+    if not api_key:
+        print("  -> AVISO: No se encontró ARGENSTATS_API_KEY. Ignorando este indicador.")
+        return pd.DataFrame(columns=['fecha', nombre_columna])
+        
+    url = f"https://argenstats.com.ar/api/v1/{endpoint}?view=historical"
+    headers = {'x-api-key': api_key}
+    
+    try:
+        r = requests.get(url, headers=headers, timeout=20)
+        if r.status_code == 200:
+            data = r.json()
+            if isinstance(data, dict) and 'data' in data:
+                data = data['data']
+
+            df = pd.DataFrame(data)
+            col_fecha = next((c for c in df.columns if c.lower() in ['date', 'fecha', 'periodo', 'time']), None)
+            col_valor = next((c for c in df.columns if c.lower() in ['value', 'valor', 'indice', 'rate', 'data', 'emae', 'cer']), None)
+            
+            if not col_fecha and len(df.columns) >= 2:
+                col_fecha, col_valor = df.columns[0], df.columns[1]
+
+            if col_fecha and col_valor:
+                df = df[[col_fecha, col_valor]].rename(columns={col_fecha: 'fecha', col_valor: nombre_columna})
+                df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce')
+                df[nombre_columna] = pd.to_numeric(df[nombre_columna], errors='coerce')
+                
+                df = df.dropna(subset=['fecha'])
+                df['periodo'] = df['fecha'].dt.to_period('M')
+                df = df.groupby('periodo').last().reset_index()
+                df['fecha'] = df['periodo'].dt.strftime('%Y-%m')
+                return df[['fecha', nombre_columna]]
+    except Exception as e:
+        print(f"  -> Error consultando ArgenStats ({endpoint}): {e}")
+        
+    return pd.DataFrame(columns=['fecha', nombre_columna])
+
 print("=== CONSTRUYENDO BASE DE DATOS ===")
 df_dolares = fetch_dolares_history()
 df_itcrm = fetch_itcrm_excel()
 df_us_cpi = fetch_us_cpi()
 df_bandas = fetch_bandas_cambiarias()
+
+# Nuevos indicadores desde ArgenStats
+df_emae = fetch_argenstats("economic-activity", "emae")
+df_cer = fetch_argenstats("cer", "cer")
 
 df_mensual = pd.DataFrame(columns=['fecha'])
 
@@ -250,18 +285,17 @@ for id_var, nombre in VARS_MENSUAL.items():
     df_temp = fetch_bcra_history(id_var, nombre, is_daily=False)
     if not df_temp.empty: df_mensual = pd.merge(df_mensual, df_temp, on='fecha', how='outer')
 
-# AGREGAMOS LAS BANDAS A MENSUAL PARA EL GENERADOR
 if not df_bandas.empty:
     df_bandas_m = df_bandas.copy()
     df_bandas_m['fecha'] = pd.to_datetime(df_bandas_m['fecha'], errors='coerce')
     df_bandas_m = df_bandas_m.dropna(subset=['fecha'])
-    
     df_bandas_m['periodo'] = df_bandas_m['fecha'].dt.to_period('M')
     df_bandas_m = df_bandas_m.groupby('periodo').last().reset_index()
     df_bandas_m['fecha'] = df_bandas_m['periodo'].dt.strftime('%Y-%m')
     df_mensual = pd.merge(df_mensual, df_bandas_m[['fecha', 'banda_inferior', 'banda_superior']], on='fecha', how='outer')
 
-for df_externo in [df_itcrm, df_dolares, df_us_cpi]:
+# Sumamos a la lista los nuevos DataFrames
+for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_emae, df_cer]:
     if not df_externo.empty:
         df_ext = df_externo.copy()
         df_ext['fecha'] = pd.to_datetime(df_ext['fecha'], errors='coerce')
@@ -275,13 +309,11 @@ for df_externo in [df_itcrm, df_dolares, df_us_cpi]:
 if len(df_mensual.columns) > 1:
     df_mensual = df_mensual.sort_values('fecha').ffill()
     
-    # Creamos las versiones corrientes
     usd_cols = ['depositos_usd', 'prestamos_usd', 'reservas', 'compra_divisas']
     for col in usd_cols:
         if col in df_mensual.columns:
             df_mensual[col + '_corriente'] = df_mensual[col].copy()
             
-    # --- DEFLACTOR USD ---
     if 'us_cpi' in df_mensual.columns and df_mensual['us_cpi'].notna().any():
         last_cpi = df_mensual['us_cpi'].dropna().iloc[-1]
         df_mensual['us_cpi_index'] = df_mensual['us_cpi'] / last_cpi
@@ -289,7 +321,6 @@ if len(df_mensual.columns) > 1:
             if col in df_mensual.columns:
                 df_mensual[col] = df_mensual[col] / df_mensual['us_cpi_index']
     
-    # --- DEFLACTOR ARS ---
     if 'ipc_mensual' in df_mensual.columns:
         index_vals = [1.0]
         for i in range(1, len(df_mensual)):
@@ -314,7 +345,6 @@ if len(df_mensual.columns) > 1:
     if 'rem_interanual' in df_mensual.columns: df_mensual['rem_interanual'] = df_mensual['rem_interanual'].shift(12)
     df_mensual = df_mensual.where(pd.notnull(df_mensual), None).tail(240)
 
-# Variables Diarias
 df_diario = pd.DataFrame(columns=['fecha'])
 for id_var, nombre in VARS_DIARIO.items():
     df_temp = fetch_bcra_history(id_var, nombre, is_daily=True)

@@ -40,7 +40,7 @@ body.mobile-mode .card-header { flex-direction: column; align-items: flex-start;
 body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
 </style></head><body>
 
-<div class="header"><h1 style="font-weight:900;margin:0 0 0.5rem 0;">Dashboard Monetario CEER</h1><p style="font-weight:600;margin:0;">Análisis histórico a precios constantes alimentado por BCRA</p></div>
+<div class="header"><h1 style="font-weight:900;margin:0 0 0.5rem 0;">Dashboard Monetario CEER</h1><p style="font-weight:600;margin:0;">Análisis histórico a precios constantes alimentado por BCRA y ArgenStats</p></div>
 
 <div class="container">
     <div class="view-toggles">
@@ -68,6 +68,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
     </div></div>
 
     <div id="macro" class="tab-content"><div class="chart-grid">
+        <div class="chart-card" style="grid-column:1/-1;"><div class="card-header"><h3 class="chart-title">Actividad Económica (EMAE Base 2004) vs Inflación</h3><div class="card-tools"><button onclick="dlPNG('chartEmae')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartEmae')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartEmae"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tipo de Cambio Real (General Base 100)</h3><div class="card-tools"><button onclick="dlPNG('chartITCRM')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartITCRM')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartITCRM"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Reservas vs. Compras BCRA (M. USD Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartReservas')" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartReservas')" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartReservas"></canvas></div></div>
@@ -105,6 +106,8 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
 
     const DICT = {
         'bandas':{l:'Bandas Cambiarias (ARS/USD)', cD:true, isU:false},
+        'emae':{l:'EMAE (Base 2004=100)', cD:false, isU:false},
+        'cer':{l:'Índice CER', cD:false, isU:false},
         'tc_minorista':{l:'T.C. Minorista (ARS/USD)', cD:true, isU:false},'tc_mayorista':{l:'T.C. Mayorista (ARS/USD)', cD:true, isU:false},'dolar_mep':{l:'Dólar MEP (ARS/USD)', cD:true, isU:false},'dolar_blue':{l:'Dólar Blue (ARS/USD)', cD:true, isU:false},
         'brecha_mep':{l:'Brecha MEP (%)', cD:false, isU:false},'brecha_blue':{l:'Brecha Blue (%)', cD:false, isU:false},
         'itcrm':{l:'ITCRM General (Base 100)', cD:false, isU:false},'tcr_brasil':{l:'TCR Brasil', cD:false, isU:false},'tcr_usa':{l:'TCR EE.UU.', cD:false, isU:false},'tcr_zona_euro':{l:'TCR Euro', cD:false, isU:false},'tcr_china':{l:'TCR China', cD:false, isU:false},'tcr_mexico':{l:'TCR México', cD:false, isU:false},'tcr_chile':{l:'TCR Chile', cD:false, isU:false},'tcr_uruguay':{l:'TCR Uruguay', cD:false, isU:false},
@@ -303,6 +306,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         buildC('chartDepositos', [{label:'Plazo Fijo',data:m('plazo_fijo'),backgroundColor:'#1e3a8a',fill:true,stacked:true},{label:'Cajas Ahorro',data:m('ca'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Cuentas Ctes',data:m('cc'),backgroundColor:'#93c5fd',fill:true,stacked:true}], {}, true);
         buildC('chartUSD', [{label:'Depósitos (USD Nominales)',data:getNom('depositos_usd'),borderColor:'#10b981',borderWidth:3},{label:'Préstamos (USD Nominales)',data:getNom('prestamos_usd'),borderColor:'#1e3a8a',borderWidth:3}]);
         
+        buildC('chartEmae', [{label:'EMAE (Base 2004)',data:m('emae'),borderColor:'#10b981',borderWidth:3,yAxisID:'y'},{label:'IPC Mensual (%)',data:m('ipc_mensual'),type:'bar',backgroundColor:'rgba(239,68,68,0.2)',yAxisID:'y1'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: ArgenStats y BCRA');
         buildC('chartBrecha', [{label:'Brecha Blue (%)',data:m('brecha_blue'),backgroundColor:'rgba(37,99,235,0.25)',borderColor:'#2563eb',fill:true,yAxisID:'y1',borderWidth:2},{label:'Brecha MEP (%)',data:m('brecha_mep'),backgroundColor:'rgba(16,185,129,0.25)',borderColor:'#10b981',fill:true,yAxisID:'y1',borderWidth:2}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
         buildC('chartITCRM', [{label:'ITCRM General',data:m('itcrm'),borderColor:'#1e3a8a',borderWidth:3}]);
         buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:'#1e3a8a',yAxisID:'y',borderWidth:3},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:(c)=>c.raw<0?'#ef4444':'#10b981'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y BLS');
