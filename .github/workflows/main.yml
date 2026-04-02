@@ -26,6 +26,8 @@ jobs:
         pip install pandas requests openpyxl
 
     - name: 4. Ejecutar tu Súper Cerebro
+      env:
+        ARGENSTATS_API_KEY: ${{ secrets.ARGENSTATS_API_KEY }}
       run: python bot_monetario.py
 
     - name: 5. Guardar el nuevo JSON en GitHub
@@ -33,5 +35,5 @@ jobs:
         git config --local user.email "bot-madrugador@ceer.com"
         git config --local user.name "Robot BCRA"
         git add datos_historicos.json
-        # Solo hace el commit si el archivo realmente cambió (si el BCRA subió datos nuevos)
+        # Solo hace el commit si el archivo realmente cambió
         git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Datos actualizados automáticamente" && git push)
