@@ -3,9 +3,7 @@ import pandas as pd
 import json
 import warnings
 import os
-import re
 import time
-from io import StringIO
 
 warnings.filterwarnings('ignore')
 
@@ -82,7 +80,6 @@ def fetch_us_cpi():
     print("Procesando CPI de EEUU (Inflación en Dólares)...")
     df_cpi = pd.DataFrame(columns=['fecha', 'us_cpi'])
     
-    # 1. Historia desde el archivo CSV exacto que funciona bien
     cpi_path = r"C:\Users\Sofia\Downloads\CPIAUCSL.csv"
             
     if os.path.exists(cpi_path):
@@ -91,13 +88,11 @@ def fetch_us_cpi():
             df_hist['fecha'] = pd.to_datetime(df_hist['observation_date'], errors='coerce')
             df_hist = df_hist.rename(columns={'CPIAUCSL': 'us_cpi'})
             df_cpi = df_hist[['fecha', 'us_cpi']].dropna(subset=['fecha', 'us_cpi'])
-            print(f"  -> ¡Historia leída desde {cpi_path} con éxito!")
         except Exception as e:
-            print(f"  -> Error leyendo archivo CPI en {cpi_path}: {e}")
+            print(f"  -> Error leyendo archivo CPI: {e}")
 
     df_cpi['us_cpi'] = pd.to_numeric(df_cpi['us_cpi'], errors='coerce')
 
-    # 2. Obtener el último dato desde TradingEconomics (API Snapshot)
     try:
         api_key = 'guest:guest' 
         url = f"https://api.tradingeconomics.com/country/united states?c={api_key}&f=json"
@@ -108,17 +103,11 @@ def fetch_us_cpi():
             if cpi_item:
                 last_date = pd.to_datetime(cpi_item.get('LatestValueDate'))
                 last_val = float(cpi_item.get('LatestValue'))
-                print(f"  -> TradingEconomics (Último dato capturado): {last_date.strftime('%Y-%m')} -> {last_val}")
-                
                 if df_cpi.empty or last_date > df_cpi['fecha'].max():
                     nuevo_registro = pd.DataFrame([{'fecha': last_date, 'us_cpi': last_val}])
                     df_cpi = pd.concat([df_cpi, nuevo_registro], ignore_index=True)
     except Exception as e:
         print(f"  -> Error consultando TradingEconomics: {e}")
-
-    if df_cpi.empty:
-        print("  -> No se pudo obtener inflación de EEUU. Se usarán dólares nominales.")
-        return pd.DataFrame(columns=['fecha', 'us_cpi'])
         
     return df_cpi.sort_values('fecha')
 
@@ -129,7 +118,6 @@ def fetch_bandas_cambiarias():
     archivo_2025 = r"C:\Users\Sofia\Downloads\serie-completa-bandas-cambiarias-2025.xlsx"
             
     if os.path.exists(archivo_2025):
-        print(f"  -> Integrando datos de bandas de 2025 desde archivo local...")
         try:
             df_raw = pd.read_excel(archivo_2025, header=None, nrows=20)
             header_idx = 0
@@ -158,11 +146,9 @@ def fetch_bandas_cambiarias():
                         df_25[col] = pd.to_numeric(df_25[col], errors='coerce')
                 
                 df_final = pd.concat([df_final, df_25])
-        except Exception as e:
-            print(f"  -> Error procesando archivo 2025: {e}")
+        except: pass
 
     try:
-        print("  -> Scrapeando bandas actuales de la web del BCRA...")
         url_excel = "https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/serie-completa-bandas-cambiarias.xlsx"
         r = requests.get(url_excel, headers={'User-Agent': 'Mozilla/5.0'}, verify=False, timeout=30)
         temp_bandas = os.path.join(BASE_DIR, 'bandas_temp.xlsx')
@@ -187,13 +173,7 @@ def fetch_bandas_cambiarias():
                 df_final = pd.concat([df_final, df_actual])
                 
             if os.path.exists(temp_bandas): os.remove(temp_bandas)
-    except Exception as e:
-        print(f"  -> Error descargando bandas actuales: {e}")
-    finally:
-        temp_bandas = os.path.join(BASE_DIR, 'bandas_temp.xlsx')
-        if os.path.exists(temp_bandas):
-            try: os.remove(temp_bandas)
-            except: pass
+    except: pass
             
     if not df_final.empty:
         df_final['fecha'] = pd.to_datetime(df_final['fecha'], errors='coerce')
@@ -230,44 +210,58 @@ def fetch_bcra_history(id_var, nombre, is_daily=False):
         df_acumulado['fecha'] = df_acumulado['periodo'].dt.strftime('%Y-%m')
         return df_acumulado[['fecha', nombre]]
 
-def fetch_argenstats(endpoint, nombre_columna):
-    print(f"Descargando de ArgenStats: {endpoint}...")
-    api_key = os.environ.get('ARGENSTATS_API_KEY')
-    if not api_key:
-        print("  -> AVISO: No se encontró ARGENSTATS_API_KEY. Ignorando este indicador.")
-        return pd.DataFrame(columns=['fecha', nombre_columna])
-        
-    url = f"https://argenstats.com.ar/api/v1/{endpoint}?view=historical"
-    headers = {'x-api-key': api_key}
+def fetch_macro_gob_ar():
+    print("Descargando Macroeconomía Oficial (Datos.gob.ar)...")
     
-    try:
-        r = requests.get(url, headers=headers, timeout=20)
-        if r.status_code == 200:
-            data = r.json()
-            if isinstance(data, dict) and 'data' in data:
-                data = data['data']
-
-            df = pd.DataFrame(data)
-            col_fecha = next((c for c in df.columns if c.lower() in ['date', 'fecha', 'periodo', 'time']), None)
-            col_valor = next((c for c in df.columns if c.lower() in ['value', 'valor', 'indice', 'rate', 'data', 'emae', 'cer']), None)
+    # Nos quedamos solo con las series confiables y actualizadas
+    series = {
+        "emae": "143.3_NO_PR_2004_A_31", # EMAE Desestacionalizado
+        "desempleo": "42.3_EPH_PUNTUATAL_0_M_30" 
+    }
+    
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    df_final = pd.DataFrame(columns=['fecha'])
+    
+    for nombre, id_serie in series.items():
+        print(f"  -> Buscando {nombre.upper()}...")
+        url = f"https://apis.datos.gob.ar/series/api/series?ids={id_serie}&format=json&limit=5000"
+        try:
+            r = requests.get(url, headers=headers, timeout=20)
+            if r.status_code == 200:
+                data = r.json().get('data', [])
+                if data:
+                    df_temp = pd.DataFrame(data, columns=['fecha', nombre])
+                    df_temp['fecha'] = pd.to_datetime(df_temp['fecha'], errors='coerce')
+                    df_temp[nombre] = pd.to_numeric(df_temp[nombre], errors='coerce')
+                    
+                    df_temp['periodo'] = df_temp['fecha'].dt.to_period('M')
+                    df_temp = df_temp.groupby('periodo').last().reset_index()
+                    df_temp['fecha'] = df_temp['periodo'].dt.strftime('%Y-%m')
+                    df_temp = df_temp.drop(columns=['periodo'])
+                    
+                    if df_final.empty:
+                        df_final = df_temp
+                    else:
+                        df_final = pd.merge(df_final, df_temp, on='fecha', how='outer')
+                    print(f"     [OK] {len(df_temp)} registros descargados.")
+            time.sleep(2) 
+        except Exception as e:
+            print(f"     [FALLA] Conexión: {e}")
+            time.sleep(2)
             
-            if not col_fecha and len(df.columns) >= 2:
-                col_fecha, col_valor = df.columns[0], df.columns[1]
-
-            if col_fecha and col_valor:
-                df = df[[col_fecha, col_valor]].rename(columns={col_fecha: 'fecha', col_valor: nombre_columna})
-                df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce')
-                df[nombre_columna] = pd.to_numeric(df[nombre_columna], errors='coerce')
-                
-                df = df.dropna(subset=['fecha'])
-                df['periodo'] = df['fecha'].dt.to_period('M')
-                df = df.groupby('periodo').last().reset_index()
-                df['fecha'] = df['periodo'].dt.strftime('%Y-%m')
-                return df[['fecha', nombre_columna]]
-    except Exception as e:
-        print(f"  -> Error consultando ArgenStats ({endpoint}): {e}")
+    if not df_final.empty:
+        df_final['fecha'] = pd.to_datetime(df_final['fecha'])
+        df_final = df_final.sort_values('fecha').reset_index(drop=True)
         
-    return pd.DataFrame(columns=['fecha', nombre_columna])
+        # Mantenemos la interpolación para que el desempleo trimestral no se vea cortado
+        if 'desempleo' in df_final.columns:
+            df_final['desempleo'] = df_final['desempleo'].interpolate(method='linear')
+            
+        df_final = df_final.ffill()
+        df_final['fecha'] = df_final['fecha'].dt.strftime('%Y-%m')
+        return df_final
+        
+    return pd.DataFrame(columns=['fecha', 'emae', 'desempleo'])
 
 print("=== CONSTRUYENDO BASE DE DATOS ===")
 df_dolares = fetch_dolares_history()
@@ -275,9 +269,7 @@ df_itcrm = fetch_itcrm_excel()
 df_us_cpi = fetch_us_cpi()
 df_bandas = fetch_bandas_cambiarias()
 
-# Nuevos indicadores desde ArgenStats
-df_emae = fetch_argenstats("economic-activity", "emae")
-df_cer = fetch_argenstats("cer", "cer")
+df_macro = fetch_macro_gob_ar()
 
 df_mensual = pd.DataFrame(columns=['fecha'])
 
@@ -294,8 +286,7 @@ if not df_bandas.empty:
     df_bandas_m['fecha'] = df_bandas_m['periodo'].dt.strftime('%Y-%m')
     df_mensual = pd.merge(df_mensual, df_bandas_m[['fecha', 'banda_inferior', 'banda_superior']], on='fecha', how='outer')
 
-# Sumamos a la lista los nuevos DataFrames
-for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_emae, df_cer]:
+for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_macro]:
     if not df_externo.empty:
         df_ext = df_externo.copy()
         df_ext['fecha'] = pd.to_datetime(df_ext['fecha'], errors='coerce')
