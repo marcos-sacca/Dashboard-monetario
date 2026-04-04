@@ -139,7 +139,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         if(s){ let s_m=s.substring(0,7); st_m=window.fechas_m.find(f=>f>=s_m)||st_m; st_d=window.fechas_d.find(f=>f>=s)||st_d; }
         if(e){ let e_m=e.substring(0,7); en_m=[...window.fechas_m].reverse().find(f=>f<=e_m)||en_m; en_d=[...window.fechas_d].reverse().find(f=>f<=e)||en_d; }
         window.allCharts.forEach(c=>{
-            if(c.options.scales.x && c.canvas.id !== 'chartGeneradorCorrelacion'){
+            if(c.options.scales.x && c.canvas.id !== 'chartGenerador'){
                 c.options.scales.x.min = (c.canvas.id==='chartDiario')?st_d:st_m;
                 c.options.scales.x.max = (c.canvas.id==='chartDiario')?en_d:en_m;
                 c.update();
@@ -187,7 +187,12 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         }
 
         document.getElementById('resultadoGenerador').style.display='block';
-        if(window.cGen){ window.allCharts=window.allCharts.filter(c=>c!==window.cGen); window.cGen.destroy(); }
+        
+        if(window.cGen){ 
+            window.allCharts = window.allCharts.filter(c => c !== window.cGen); 
+            window.cGen.destroy(); 
+            window.cGen = null;
+        }
         
         const getD = (n) => { 
             const v = document.getElementById(`genSelect${n}`).value; 
@@ -204,41 +209,56 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
             return { isBanda: false, l: DICT[v].l + (DICT[v].cD && quiereCorriente?' (Nominal)':''), d: dataFinal, t: document.getElementById(`genType${n}`).value }; 
         };
         
-        let usaBLS = false;
-        if(DICT[v1_val].isU && document.getElementById('genNom1').value === 'constante') usaBLS = true;
-        if(document.querySelector('input[name="numVars"]:checked').value==='2'){
-            let v2_val = document.getElementById('genSelect2').value;
-            if(DICT[v2_val].isU && document.getElementById('genNom2').value === 'constante') usaBLS = true;
-        }
+        // CONSTRUCTOR INTELIGENTE DE FUENTES
+        let sources = new Set();
+        const addSrc = (v, n) => {
+            if (v === 'emae' || v === 'desempleo') sources.add('Datos.gob.ar');
+            else {
+                sources.add('BCRA');
+                if (DICT[v].isU && document.getElementById(`genNom${n}`).value === 'constante') sources.add('BLS');
+            }
+        };
         
-        let fuenteSTR = 'Fuente: CEER en base a BCRA y Datos.gob.ar' + (usaBLS ? ' y BLS/TradingEconomics' : '');
+        addSrc(v1_val, 1);
+        if(document.querySelector('input[name="numVars"]:checked').value==='2') addSrc(document.getElementById('genSelect2').value, 2);
+        
+        let sArr = Array.from(sources);
+        let fuenteSTR = 'Fuente: CEER en base a ' + (sArr.length === 1 ? sArr[0] : sArr.length === 2 ? sArr[0] + ' y ' + sArr[1] : sArr[0] + ', ' + sArr[1] + ' y ' + sArr[2]);
+
         let isSc = document.getElementById('genModo').value === 'scatter';
         let d1 = getD(1);
         
         if(isSc){
             let d2=getD(2);
             if (d1.isBanda || d2.isBanda) {
-                alert("Las Bandas Cambiarias no se pueden usar en Gráficos de Correlación porque representan dos valores. Elegí Línea de Tiempo o cambiá la métrica."); return;
+                alert("Las Bandas Cambiarias no se pueden usar en Gráficos de Correlación. Elegí Línea de Tiempo o cambiá la métrica."); return;
             }
 
             let pts=[];
             for(let i=0; i<Math.min(d1.d.length, d2.d.length); i++){
                 if(d1.d[i]!=null && d2.d[i]!=null) pts.push({y:d1.d[i], x:d2.d[i], label:window.fechas_m[i]});
             }
+            
+            if(pts.length < 2) {
+                alert("No hay suficientes datos superpuestos en el tiempo entre ambas variables para calcular una correlación.");
+                return;
+            }
+
             let n=pts.length, sX=0, sY=0, sXY=0, sXX=0, sYY=0;
             pts.forEach(p=>{ sX+=p.x; sY+=p.y; sXY+=p.x*p.y; sXX+=p.x*p.x; sYY+=p.y*p.y; });
             let slope = (n*sXY - sX*sY)/(n*sXX - sX*sX); let intercept = (sY - slope*sX)/n;
             let r2 = Math.pow((n*sXY - sX*sY)/Math.sqrt((n*sXX - sX*sX)*(n*sYY - sY*sY)), 2);
+            if(isNaN(r2)) r2 = 0; 
+            
             let minX = Math.min(...pts.map(p=>p.x)), maxX = Math.max(...pts.map(p=>p.x));
             
             let d = [
                 {type:'scatter', label:'Observaciones', data:pts, backgroundColor:'rgba(30,58,138,0.6)', pointRadius:5, hoverRadius:8},
                 {type:'line', label:`Regresión (R² = ${r2.toFixed(4)})`, data:[{x:minX,y:slope*minX+intercept},{x:maxX,y:slope*maxX+intercept}], borderColor:'#ef4444', borderWidth:3, pointRadius:0, fill:false}
             ];
-            document.getElementById('chartGenerador').id = 'chartGeneradorCorrelacion';
-            window.cGen = buildC('chartGeneradorCorrelacion', d, {x:{type:'linear',position:'bottom',title:{display:true,text:d2.l,font:{weight:'bold'}}},y:{title:{display:true,text:d1.l,font:{weight:'bold'}}}}, false, true, fuenteSTR);
+            
+            window.cGen = buildC('chartGenerador', d, {x:{type:'linear',position:'bottom',title:{display:true,text:d2.l,font:{weight:'bold'}}},y:{title:{display:true,text:d1.l,font:{weight:'bold'}}}}, false, true, fuenteSTR);
         } else {
-            if(document.getElementById('chartGeneradorCorrelacion')) document.getElementById('chartGeneradorCorrelacion').id = 'chartGenerador';
             let d=[];
             
             const addDataset = (dObj, colorMain, yAxisID) => {
@@ -283,11 +303,10 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         window.allCharts.push(c); return c;
     }
 
-    function dlPNG(id){ const cv=document.getElementById(id) || document.getElementById('chartGeneradorCorrelacion'); const a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cv.id+'_ceer.png'; a.click(); }
+    function dlPNG(id){ const cv=document.getElementById(id); const a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cv.id+'_ceer.png'; a.click(); }
     
     function dlCSV(id){
-        const realId = document.getElementById(id) ? id : 'chartGeneradorCorrelacion';
-        const c=Chart.getChart(realId); if(!c) return; const d=c.data.datasets; let csv='';
+        const c=Chart.getChart(id); if(!c) return; const d=c.data.datasets; let csv='';
         if(c.config.type==='scatter'){
             csv=`"Mes","${c.options.scales.x.title.text} (X)","${c.options.scales.y.title.text} (Y)"\n`;
             d[0].data.forEach(p=>csv+=`"${p.label}",${p.x},${p.y}\n`);
@@ -297,7 +316,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
             csv='Fecha'; d.forEach(x=>csv+=`,"${x.label}"`); csv+='\n';
             for(let i=sI;i<=eI;i++){ csv+=l[i]; d.forEach(x=>{let v=x.data[i]; csv+=','+(v!==null&&v!==undefined?v:'');}); csv+='\n'; }
         }
-        const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download=realId+'_ceer.csv'; a.click();
+        const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download=id+'_ceer.csv'; a.click();
     }
 
     async function load(){
@@ -305,7 +324,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         window.fechas_m=raw.mensual.fecha||[]; window.fechas_d=raw.diario.fecha||[]; const cln=(a)=>a?a.map(v=>v===null?null:Number(v)):[];
         for(let k in raw.mensual) window.data_m[k]=cln(raw.mensual[k]); const m=(k)=>window.data_m[k]||[]; const d=(k)=>cln(raw.diario[k]);
         
-        const getNom = (k) => window.data_m[k+'_corriente'] || window.data_m[k] || [];
+        const getNom = (k) => window.data_m[k+'_corriente'] ? window.data_m[k+'_corriente'] : (window.data_m[k] || []);
 
         buildC('chartPrestamos', [{label:'Tarjetas',data:m('tarjetas'),backgroundColor:'#93c5fd',fill:true,stacked:true},{label:'Personales',data:m('personales'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Hipotecarios',data:m('hipotecarios'),backgroundColor:'#2563eb',fill:true,stacked:true},{label:'Prendarios',data:m('prendarios'),backgroundColor:'#1e3a8a',fill:true,stacked:true}], {}, true);
         buildC('chartDepositos', [{label:'Plazo Fijo',data:m('plazo_fijo'),backgroundColor:'#1e3a8a',fill:true,stacked:true},{label:'Cajas Ahorro',data:m('ca'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Cuentas Ctes',data:m('cc'),backgroundColor:'#93c5fd',fill:true,stacked:true}], {}, true);
