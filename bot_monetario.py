@@ -111,6 +111,40 @@ def fetch_us_cpi():
         
     return df_cpi.sort_values('fecha')
 
+def fetch_tasa_fed():
+    print("Descargando Tasa de la FED (EFFR)...")
+    now = pd.Timestamp.now()
+    start_date = "2004-01-01"
+    end_date = now.strftime('%Y-%m-%d')
+    url = f"https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start_date}&endDate={end_date}"
+    
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        r = requests.get(url, headers=headers, timeout=20)
+        
+        if r.status_code == 200:
+            data = r.json().get('refRates', [])
+            if data:
+                df = pd.DataFrame(data)
+                df = df[['effectiveDate', 'percentRate']].rename(columns={
+                    'effectiveDate': 'fecha', 
+                    'percentRate': 'tasa_fed'
+                })
+                
+                df['fecha'] = pd.to_datetime(df['fecha'])
+                df['tasa_fed'] = pd.to_numeric(df['tasa_fed'], errors='coerce')
+                
+                df['periodo'] = df['fecha'].dt.to_period('M')
+                df_mensual = df.groupby('periodo').last().reset_index()
+                df_mensual['fecha'] = df_mensual['periodo'].dt.strftime('%Y-%m')
+                
+                print(f"  -> ¡Tasa FED descargada! {len(df_mensual)} meses obtenidos.")
+                return df_mensual[['fecha', 'tasa_fed']]
+    except Exception as e:
+        print(f"  -> Error al extraer Tasa FED: {e}")
+        
+    return pd.DataFrame(columns=['fecha', 'tasa_fed'])
+
 def fetch_bandas_cambiarias():
     print("Procesando Bandas Cambiarias del BCRA...")
     df_final = pd.DataFrame(columns=['fecha', 'banda_inferior', 'banda_superior'])
@@ -213,9 +247,8 @@ def fetch_bcra_history(id_var, nombre, is_daily=False):
 def fetch_macro_gob_ar():
     print("Descargando Macroeconomía Oficial (Datos.gob.ar)...")
     
-    # Nos quedamos solo con las series confiables y actualizadas
     series = {
-        "emae": "143.3_NO_PR_2004_A_31", # EMAE Desestacionalizado
+        "emae": "143.3_NO_PR_2004_A_31", 
         "desempleo": "42.3_EPH_PUNTUATAL_0_M_30" 
     }
     
@@ -253,7 +286,6 @@ def fetch_macro_gob_ar():
         df_final['fecha'] = pd.to_datetime(df_final['fecha'])
         df_final = df_final.sort_values('fecha').reset_index(drop=True)
         
-        # Mantenemos la interpolación para que el desempleo trimestral no se vea cortado
         if 'desempleo' in df_final.columns:
             df_final['desempleo'] = df_final['desempleo'].interpolate(method='linear')
             
@@ -267,6 +299,7 @@ print("=== CONSTRUYENDO BASE DE DATOS ===")
 df_dolares = fetch_dolares_history()
 df_itcrm = fetch_itcrm_excel()
 df_us_cpi = fetch_us_cpi()
+df_fed = fetch_tasa_fed()
 df_bandas = fetch_bandas_cambiarias()
 
 df_macro = fetch_macro_gob_ar()
@@ -286,7 +319,7 @@ if not df_bandas.empty:
     df_bandas_m['fecha'] = df_bandas_m['periodo'].dt.strftime('%Y-%m')
     df_mensual = pd.merge(df_mensual, df_bandas_m[['fecha', 'banda_inferior', 'banda_superior']], on='fecha', how='outer')
 
-for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_macro]:
+for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_fed, df_macro]:
     if not df_externo.empty:
         df_ext = df_externo.copy()
         df_ext['fecha'] = pd.to_datetime(df_ext['fecha'], errors='coerce')
