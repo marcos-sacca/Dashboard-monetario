@@ -252,35 +252,49 @@ def fetch_macro_gob_ar():
         "desempleo": "42.3_EPH_PUNTUATAL_0_M_30" 
     }
     
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    # NUEVO DISFRAZ: Simulamos ser un navegador real para saltar el bloqueo
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'es-AR,es;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': 'https://datos.gob.ar/'
+    }
+    
     df_final = pd.DataFrame(columns=['fecha'])
     
     for nombre, id_serie in series.items():
         print(f"  -> Buscando {nombre.upper()}...")
         url = f"https://apis.datos.gob.ar/series/api/series?ids={id_serie}&format=json&limit=5000"
-        try:
-            r = requests.get(url, headers=headers, timeout=20)
-            if r.status_code == 200:
-                data = r.json().get('data', [])
-                if data:
-                    df_temp = pd.DataFrame(data, columns=['fecha', nombre])
-                    df_temp['fecha'] = pd.to_datetime(df_temp['fecha'], errors='coerce')
-                    df_temp[nombre] = pd.to_numeric(df_temp[nombre], errors='coerce')
-                    
-                    df_temp['periodo'] = df_temp['fecha'].dt.to_period('M')
-                    df_temp = df_temp.groupby('periodo').last().reset_index()
-                    df_temp['fecha'] = df_temp['periodo'].dt.strftime('%Y-%m')
-                    df_temp = df_temp.drop(columns=['periodo'])
-                    
-                    if df_final.empty:
-                        df_final = df_temp
-                    else:
-                        df_final = pd.merge(df_final, df_temp, on='fecha', how='outer')
-                    print(f"     [OK] {len(df_temp)} registros descargados.")
-            time.sleep(2) 
-        except Exception as e:
-            print(f"     [FALLA] Conexión: {e}")
-            time.sleep(2)
+        
+        # Le damos 3 intentos en caso de que rebote temporalmente
+        for intento in range(3):
+            try:
+                # verify=False nos salva si hay drama con el certificado de Ubuntu
+                r = requests.get(url, headers=headers, timeout=30, verify=False)
+                if r.status_code == 200:
+                    data = r.json().get('data', [])
+                    if data:
+                        df_temp = pd.DataFrame(data, columns=['fecha', nombre])
+                        df_temp['fecha'] = pd.to_datetime(df_temp['fecha'], errors='coerce')
+                        df_temp[nombre] = pd.to_numeric(df_temp[nombre], errors='coerce')
+                        
+                        df_temp['periodo'] = df_temp['fecha'].dt.to_period('M')
+                        df_temp = df_temp.groupby('periodo').last().reset_index()
+                        df_temp['fecha'] = df_temp['periodo'].dt.strftime('%Y-%m')
+                        df_temp = df_temp.drop(columns=['periodo'])
+                        
+                        if df_final.empty:
+                            df_final = df_temp
+                        else:
+                            df_final = pd.merge(df_final, df_temp, on='fecha', how='outer')
+                        print(f"     [OK] {len(df_temp)} registros descargados.")
+                    break # Si anduvo perfecto, salimos del loop de intentos
+                else:
+                    print(f"     [INTENTO {intento+1}] Código devuelto: {r.status_code}. Reintentando...")
+                    time.sleep(3)
+            except Exception as e:
+                print(f"     [INTENTO {intento+1}] Falla de conexión: {e}")
+                time.sleep(3)
             
     if not df_final.empty:
         df_final['fecha'] = pd.to_datetime(df_final['fecha'])
