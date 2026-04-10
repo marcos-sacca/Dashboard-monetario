@@ -25,17 +25,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install pandas requests openpyxl
 
-    - name: 4. Ejecutar tu Súper Cerebro
+    - name: 4. Ejecutar tu Súper Cerebro y Diagnosticar
       env:
         ARGENSTATS_API_KEY: ${{ secrets.ARGENSTATS_API_KEY }}
-      run: python bot_monetario.py
+      run: |
+        echo "=== ARCHIVOS ANTES DE CORRER EL SCRIPT ==="
+        ls -la
+        
+        echo "=== EJECUTANDO PYTHON ==="
+        python bot_monetario.py
+        
+        echo "=== ARCHIVOS DESPUÉS DE CORRER EL SCRIPT ==="
+        ls -la
+        
+        echo "=== ESTADO DE GIT ==="
+        git status
 
     - name: 5. Guardar los nuevos datos en GitHub
       run: |
         git config --local user.email "bot-madrugador@ceer.com"
         git config --local user.name "Robot BCRA"
-        # ATENCIÓN: El punto le dice que agregue TODOS los archivos modificados 
-        # (tanto datos_historicos.json como los de actividad de datos.gov)
         git add .
         # Solo hace el commit si algún archivo realmente cambió
         git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Datos actualizados automáticamente" && git push)
