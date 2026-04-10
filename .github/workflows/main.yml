@@ -1,6 +1,5 @@
 name: Actualizador Diario BCRA
 
-# Cuándo se ejecuta este robot
 on:
   schedule:
     # Corre a las 08:00 UTC, que son las 05:00 AM en Argentina
@@ -26,8 +25,6 @@ jobs:
         pip install pandas requests openpyxl
 
     - name: 4. Ejecutar tu Súper Cerebro
-      env:
-        ARGENSTATS_API_KEY: ${{ secrets.ARGENSTATS_API_KEY }}
       run: python bot_monetario.py
 
     - name: 5. Guardar el nuevo JSON en GitHub
