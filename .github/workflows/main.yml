@@ -1,5 +1,6 @@
 name: Actualizador Diario BCRA
 
+# Cuándo se ejecuta este robot
 on:
   schedule:
     # Corre a las 08:00 UTC, que son las 05:00 AM en Argentina
@@ -25,12 +26,16 @@ jobs:
         pip install pandas requests openpyxl
 
     - name: 4. Ejecutar tu Súper Cerebro
+      env:
+        ARGENSTATS_API_KEY: ${{ secrets.ARGENSTATS_API_KEY }}
       run: python bot_monetario.py
 
-    - name: 5. Guardar el nuevo JSON en GitHub
+    - name: 5. Guardar los nuevos datos en GitHub
       run: |
         git config --local user.email "bot-madrugador@ceer.com"
         git config --local user.name "Robot BCRA"
-        git add datos_historicos.json
-        # Solo hace el commit si el archivo realmente cambió
+        # ATENCIÓN: El punto le dice que agregue TODOS los archivos modificados 
+        # (tanto datos_historicos.json como los de actividad de datos.gov)
+        git add .
+        # Solo hace el commit si algún archivo realmente cambió
         git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Datos actualizados automáticamente" && git push)
