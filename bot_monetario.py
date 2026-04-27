@@ -20,11 +20,18 @@ VARS_MENSUAL = {
 }
 VARS_DIARIO = {35: 'badlar_tea', 45: 'tamar_tea'}
 
+# Disfraz estándar para engañar a los firewalls antibots
+HEADERS_BOT = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'es-AR,es;q=0.9,en-US;q=0.8,en;q=0.7'
+}
+
 def fetch_itcrm_excel():
     print("Descargando ITCRM y Bilaterales (Scrapeando Excel BCRA)...")
     temp_path = os.path.join(BASE_DIR, 'itcrm_temp.xlsx')
     try:
-        r = requests.get("https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/ITCRMSerie.xlsx", headers={'User-Agent': 'Mozilla/5.0'}, verify=False, timeout=30)
+        r = requests.get("https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/ITCRMSerie.xlsx", headers=HEADERS_BOT, verify=False, timeout=30)
         if r.status_code == 200:
             with open(temp_path, 'wb') as f: f.write(r.content)
             df = pd.read_excel(temp_path, sheet_name=0, skiprows=1)
@@ -61,14 +68,14 @@ def fetch_dolares_history():
     print("Descargando Dólares Históricos (MEP y Blue)...")
     df_d = pd.DataFrame(columns=['fecha'])
     try:
-        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa", timeout=20)
+        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa", headers=HEADERS_BOT, timeout=20)
         if r.status_code == 200:
             df_mep = pd.DataFrame(r.json())
             df_mep['fecha'] = pd.to_datetime(df_mep['fecha'])
             df_d = pd.merge(df_d, df_mep[['fecha', 'venta']].rename(columns={'venta': 'dolar_mep'}), on='fecha', how='outer')
     except Exception as e: print(f"  -> Error MEP: {e}")
     try:
-        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/blue", timeout=20)
+        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/blue", headers=HEADERS_BOT, timeout=20)
         if r.status_code == 200:
             df_blue = pd.DataFrame(r.json())
             df_blue['fecha'] = pd.to_datetime(df_blue['fecha'])
@@ -79,12 +86,14 @@ def fetch_dolares_history():
 def fetch_riesgo_pais():
     print("Descargando Riesgo País...")
     try:
-        r = requests.get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais", timeout=20)
+        r = requests.get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais", headers=HEADERS_BOT, timeout=20)
         if r.status_code == 200:
             df_rp = pd.DataFrame(r.json())
             df_rp['fecha'] = pd.to_datetime(df_rp['fecha'])
             df_rp = df_rp.rename(columns={'valor': 'riesgo_pais'})
             return df_rp[['fecha', 'riesgo_pais']].sort_values('fecha')
+        else:
+            print(f"  -> Error API Riesgo País. Código: {r.status_code}")
     except Exception as e: print(f"  -> Error Riesgo País: {e}")
     return pd.DataFrame(columns=['fecha', 'riesgo_pais'])
 
@@ -92,14 +101,21 @@ def fetch_us_cpi():
     print("Procesando CPI de EEUU (Inflación en Dólares)...")
     df_cpi = pd.DataFrame(columns=['fecha', 'us_cpi'])
     
-    # Busca el archivo Excel en la misma carpeta donde se ejecuta el script
-    cpi_path = os.path.join(BASE_DIR, 'CPIAUCSL.xlsx')
-    
-    if os.path.exists(cpi_path):
+    # Búsqueda inteligente del archivo en Linux (case-insensitive)
+    cpi_path = None
+    try:
+        for file in os.listdir(BASE_DIR):
+            if file.lower().startswith('cpiaucsl') and file.lower().endswith('.xlsx'):
+                cpi_path = os.path.join(BASE_DIR, file)
+                print(f"  -> Archivo CPI encontrado: {file}")
+                break
+    except Exception as e:
+        print(f"  -> Error escaneando carpeta: {e}")
+
+    if cpi_path and os.path.exists(cpi_path):
         try:
             df_hist = pd.read_excel(cpi_path)
             
-            # Detectamos cómo se llama la columna de fecha (suele ser DATE u observation_date)
             col_fecha = None
             for col in df_hist.columns:
                 if str(col).strip().lower() in ['date', 'observation_date', 'fecha']:
@@ -107,7 +123,6 @@ def fetch_us_cpi():
                     break
             if not col_fecha: col_fecha = df_hist.columns[0]
             
-            # Detectamos cómo se llama la columna de valores
             col_valor = None
             for col in df_hist.columns:
                 if str(col).strip().upper() == 'CPIAUCSL':
@@ -119,11 +134,11 @@ def fetch_us_cpi():
             df_hist = df_hist.rename(columns={col_valor: 'us_cpi'})
             df_cpi = df_hist[['fecha', 'us_cpi']].dropna(subset=['fecha', 'us_cpi'])
             df_cpi['us_cpi'] = pd.to_numeric(df_cpi['us_cpi'], errors='coerce')
-            print(f"  -> ¡Éxito! CPI leído desde archivo Excel local: {len(df_cpi)} meses.")
+            print(f"  -> ¡Éxito! CPI leído desde archivo Excel: {len(df_cpi)} meses.")
         except Exception as e:
             print(f"  -> Error leyendo el archivo Excel local: {e}")
     else:
-        print(f"  -> AVISO: No se encontró el archivo '{cpi_path}'. Asegurate de que se llame exactamente así y esté junto a este script.")
+        print("  -> AVISO: No se encontró ningún archivo que se llame 'CPIAUCSL.xlsx' (ni en mayúsculas ni en minúsculas) en el repositorio.")
         
     return df_cpi.sort_values('fecha')
 
@@ -135,8 +150,7 @@ def fetch_tasa_fed():
     url = f"https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start_date}&endDate={end_date}"
     
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        r = requests.get(url, headers=headers, timeout=20)
+        r = requests.get(url, headers=HEADERS_BOT, timeout=20)
         
         if r.status_code == 200:
             data = r.json().get('refRates', [])
@@ -167,7 +181,7 @@ def fetch_bandas_cambiarias():
 
     try:
         url_excel = "https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/serie-completa-bandas-cambiarias.xlsx"
-        r = requests.get(url_excel, headers={'User-Agent': 'Mozilla/5.0'}, verify=False, timeout=30)
+        r = requests.get(url_excel, headers=HEADERS_BOT, verify=False, timeout=30)
         temp_bandas = os.path.join(BASE_DIR, 'bandas_temp.xlsx')
         if r.status_code == 200:
             with open(temp_bandas, 'wb') as f: f.write(r.content)
@@ -242,13 +256,13 @@ if os.path.exists(json_path):
             if 'mensual' in data_old and data_old['mensual']:
                 df_mensual_old = pd.DataFrame(data_old['mensual'])
                 df_mensual_old['fecha'] = pd.to_datetime(df_mensual_old['fecha'], errors='coerce')
-                df_mensual_old = df_mensual_old.dropna(subset=['fecha']) # LIMPIEZA PURIFICADORA
+                df_mensual_old = df_mensual_old.dropna(subset=['fecha'])
                 df_mensual_old['fecha'] = df_mensual_old['fecha'].dt.strftime('%Y-%m')
                 df_mensual_old = df_mensual_old.set_index('fecha')
             if 'diario' in data_old and data_old['diario']:
                 df_diario_old = pd.DataFrame(data_old['diario'])
                 df_diario_old['fecha'] = pd.to_datetime(df_diario_old['fecha'], errors='coerce')
-                df_diario_old = df_diario_old.dropna(subset=['fecha']) # LIMPIEZA PURIFICADORA
+                df_diario_old = df_diario_old.dropna(subset=['fecha'])
                 df_diario_old['fecha'] = df_diario_old['fecha'].dt.strftime('%Y-%m-%d')
                 df_diario_old = df_diario_old.set_index('fecha')
     except Exception as e:
@@ -385,7 +399,6 @@ if not df_diario.empty:
     if df_diario.index.name == 'fecha':
         df_diario = df_diario.reset_index()
     
-    # Limpiamos, rellenamos y aumentamos el límite a 1000 para no perder datos históricos
     df_diario = df_diario.dropna(subset=['fecha'])
     df_diario = df_diario.sort_values('fecha').ffill().where(pd.notnull(df_diario), None).tail(1000)
 
