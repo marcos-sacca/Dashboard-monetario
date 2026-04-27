@@ -76,38 +76,54 @@ def fetch_dolares_history():
     except Exception as e: print(f"  -> Error Blue: {e}")
     return df_d
 
+def fetch_riesgo_pais():
+    print("Descargando Riesgo País...")
+    try:
+        r = requests.get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais", timeout=20)
+        if r.status_code == 200:
+            df_rp = pd.DataFrame(r.json())
+            df_rp['fecha'] = pd.to_datetime(df_rp['fecha'])
+            df_rp = df_rp.rename(columns={'valor': 'riesgo_pais'})
+            return df_rp[['fecha', 'riesgo_pais']].sort_values('fecha')
+    except Exception as e: print(f"  -> Error Riesgo País: {e}")
+    return pd.DataFrame(columns=['fecha', 'riesgo_pais'])
+
 def fetch_us_cpi():
     print("Procesando CPI de EEUU (Inflación en Dólares)...")
     df_cpi = pd.DataFrame(columns=['fecha', 'us_cpi'])
     
-    cpi_path = r"C:\Users\Sofia\Downloads\CPIAUCSL.csv"
-            
+    # Busca el archivo Excel en la misma carpeta donde se ejecuta el script
+    cpi_path = os.path.join(BASE_DIR, 'CPIAUCSL.xlsx')
+    
     if os.path.exists(cpi_path):
         try:
-            df_hist = pd.read_csv(cpi_path)
-            df_hist['fecha'] = pd.to_datetime(df_hist['observation_date'], errors='coerce')
-            df_hist = df_hist.rename(columns={'CPIAUCSL': 'us_cpi'})
+            df_hist = pd.read_excel(cpi_path)
+            
+            # Detectamos cómo se llama la columna de fecha (suele ser DATE u observation_date)
+            col_fecha = None
+            for col in df_hist.columns:
+                if str(col).strip().lower() in ['date', 'observation_date', 'fecha']:
+                    col_fecha = col
+                    break
+            if not col_fecha: col_fecha = df_hist.columns[0]
+            
+            # Detectamos cómo se llama la columna de valores
+            col_valor = None
+            for col in df_hist.columns:
+                if str(col).strip().upper() == 'CPIAUCSL':
+                    col_valor = col
+                    break
+            if not col_valor: col_valor = df_hist.columns[1]
+            
+            df_hist['fecha'] = pd.to_datetime(df_hist[col_fecha], errors='coerce')
+            df_hist = df_hist.rename(columns={col_valor: 'us_cpi'})
             df_cpi = df_hist[['fecha', 'us_cpi']].dropna(subset=['fecha', 'us_cpi'])
+            df_cpi['us_cpi'] = pd.to_numeric(df_cpi['us_cpi'], errors='coerce')
+            print(f"  -> ¡Éxito! CPI leído desde archivo Excel local: {len(df_cpi)} meses.")
         except Exception as e:
-            print(f"  -> Error leyendo archivo CPI: {e}")
-
-    df_cpi['us_cpi'] = pd.to_numeric(df_cpi['us_cpi'], errors='coerce')
-
-    try:
-        api_key = 'guest:guest' 
-        url = f"https://api.tradingeconomics.com/country/united states?c={api_key}&f=json"
-        r = requests.get(url, timeout=15)
-        if r.status_code == 200:
-            data = r.json()
-            cpi_item = next((item for item in data if item.get('Category') == 'Consumer Price Index CPI'), None)
-            if cpi_item:
-                last_date = pd.to_datetime(cpi_item.get('LatestValueDate'))
-                last_val = float(cpi_item.get('LatestValue'))
-                if df_cpi.empty or last_date > df_cpi['fecha'].max():
-                    nuevo_registro = pd.DataFrame([{'fecha': last_date, 'us_cpi': last_val}])
-                    df_cpi = pd.concat([df_cpi, nuevo_registro], ignore_index=True)
-    except Exception as e:
-        print(f"  -> Error consultando TradingEconomics: {e}")
+            print(f"  -> Error leyendo el archivo Excel local: {e}")
+    else:
+        print(f"  -> AVISO: No se encontró el archivo '{cpi_path}'. Asegurate de que se llame exactamente así y esté junto a este script.")
         
     return df_cpi.sort_values('fecha')
 
@@ -148,39 +164,6 @@ def fetch_tasa_fed():
 def fetch_bandas_cambiarias():
     print("Procesando Bandas Cambiarias del BCRA...")
     df_final = pd.DataFrame(columns=['fecha', 'banda_inferior', 'banda_superior'])
-    
-    archivo_2025 = r"C:\Users\Sofia\Downloads\serie-completa-bandas-cambiarias-2025.xlsx"
-            
-    if os.path.exists(archivo_2025):
-        try:
-            df_raw = pd.read_excel(archivo_2025, header=None, nrows=20)
-            header_idx = 0
-            for i, row in df_raw.iterrows():
-                row_str = " ".join([str(x).lower() for x in row.values])
-                if 'fecha' in row_str and ('inferior' in row_str or 'superior' in row_str):
-                    header_idx = i
-                    break
-            
-            df_25 = pd.read_excel(archivo_2025, header=header_idx)
-            col_map = {}
-            for c in df_25.columns:
-                c_str = str(c).strip().lower()
-                if 'fecha' in c_str: col_map[c] = 'fecha'
-                elif 'inferior' in c_str: col_map[c] = 'banda_inferior'
-                elif 'superior' in c_str: col_map[c] = 'banda_superior'
-            
-            df_25 = df_25.rename(columns=col_map)
-            if 'fecha' in df_25.columns:
-                df_25 = df_25[['fecha', 'banda_inferior', 'banda_superior']].dropna(subset=['fecha'])
-                df_25['fecha'] = pd.to_datetime(df_25['fecha'], errors='coerce')
-                for col in ['banda_inferior', 'banda_superior']:
-                    if col in df_25.columns:
-                        if df_25[col].dtype == 'object':
-                            df_25[col] = df_25[col].astype(str).str.replace(',', '.', regex=False)
-                        df_25[col] = pd.to_numeric(df_25[col], errors='coerce')
-                
-                df_final = pd.concat([df_final, df_25])
-        except: pass
 
     try:
         url_excel = "https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/serie-completa-bandas-cambiarias.xlsx"
@@ -244,70 +227,32 @@ def fetch_bcra_history(id_var, nombre, is_daily=False):
         df_acumulado['fecha'] = df_acumulado['periodo'].dt.strftime('%Y-%m')
         return df_acumulado[['fecha', nombre]]
 
-def fetch_macro_gob_ar():
-    print("Descargando Macroeconomía Oficial (Datos.gob.ar)...")
-    
-    series = {
-        "emae": "143.3_NO_PR_2004_A_31", 
-        "desempleo": "42.3_EPH_PUNTUATAL_0_M_30" 
-    }
-    
-    # NUEVO DISFRAZ: Simulamos ser un navegador real para saltar el bloqueo
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'es-AR,es;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer': 'https://datos.gob.ar/'
-    }
-    
-    df_final = pd.DataFrame(columns=['fecha'])
-    
-    for nombre, id_serie in series.items():
-        print(f"  -> Buscando {nombre.upper()}...")
-        url = f"https://apis.datos.gob.ar/series/api/series?ids={id_serie}&format=json&limit=5000"
-        
-        # Le damos 3 intentos en caso de que rebote temporalmente
-        for intento in range(3):
-            try:
-                # verify=False nos salva si hay drama con el certificado de Ubuntu
-                r = requests.get(url, headers=headers, timeout=30, verify=False)
-                if r.status_code == 200:
-                    data = r.json().get('data', [])
-                    if data:
-                        df_temp = pd.DataFrame(data, columns=['fecha', nombre])
-                        df_temp['fecha'] = pd.to_datetime(df_temp['fecha'], errors='coerce')
-                        df_temp[nombre] = pd.to_numeric(df_temp[nombre], errors='coerce')
-                        
-                        df_temp['periodo'] = df_temp['fecha'].dt.to_period('M')
-                        df_temp = df_temp.groupby('periodo').last().reset_index()
-                        df_temp['fecha'] = df_temp['periodo'].dt.strftime('%Y-%m')
-                        df_temp = df_temp.drop(columns=['periodo'])
-                        
-                        if df_final.empty:
-                            df_final = df_temp
-                        else:
-                            df_final = pd.merge(df_final, df_temp, on='fecha', how='outer')
-                        print(f"     [OK] {len(df_temp)} registros descargados.")
-                    break # Si anduvo perfecto, salimos del loop de intentos
-                else:
-                    print(f"     [INTENTO {intento+1}] Código devuelto: {r.status_code}. Reintentando...")
-                    time.sleep(3)
-            except Exception as e:
-                print(f"     [INTENTO {intento+1}] Falla de conexión: {e}")
-                time.sleep(3)
-            
-    if not df_final.empty:
-        df_final['fecha'] = pd.to_datetime(df_final['fecha'])
-        df_final = df_final.sort_values('fecha').reset_index(drop=True)
-        
-        if 'desempleo' in df_final.columns:
-            df_final['desempleo'] = df_final['desempleo'].interpolate(method='linear')
-            
-        df_final = df_final.ffill()
-        df_final['fecha'] = df_final['fecha'].dt.strftime('%Y-%m')
-        return df_final
-        
-    return pd.DataFrame(columns=['fecha', 'emae', 'desempleo'])
+print("=== INICIANDO ROBOT BCRA ===")
+
+# --- SISTEMA DE MEMORIA ANTIFALLOS Y LIMPIEZA DE CORRUPTOS ---
+json_path = os.path.join(BASE_DIR, 'datos_historicos.json')
+df_mensual_old = pd.DataFrame()
+df_diario_old = pd.DataFrame()
+
+if os.path.exists(json_path):
+    print("-> Cargando datos históricos anteriores para prevenir blancos si falla una API...")
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data_old = json.load(f)
+            if 'mensual' in data_old and data_old['mensual']:
+                df_mensual_old = pd.DataFrame(data_old['mensual'])
+                df_mensual_old['fecha'] = pd.to_datetime(df_mensual_old['fecha'], errors='coerce')
+                df_mensual_old = df_mensual_old.dropna(subset=['fecha']) # LIMPIEZA PURIFICADORA
+                df_mensual_old['fecha'] = df_mensual_old['fecha'].dt.strftime('%Y-%m')
+                df_mensual_old = df_mensual_old.set_index('fecha')
+            if 'diario' in data_old and data_old['diario']:
+                df_diario_old = pd.DataFrame(data_old['diario'])
+                df_diario_old['fecha'] = pd.to_datetime(df_diario_old['fecha'], errors='coerce')
+                df_diario_old = df_diario_old.dropna(subset=['fecha']) # LIMPIEZA PURIFICADORA
+                df_diario_old['fecha'] = df_diario_old['fecha'].dt.strftime('%Y-%m-%d')
+                df_diario_old = df_diario_old.set_index('fecha')
+    except Exception as e:
+        print(f"-> Aviso: No se pudo cargar el JSON previo: {e}")
 
 print("=== CONSTRUYENDO BASE DE DATOS ===")
 df_dolares = fetch_dolares_history()
@@ -315,8 +260,7 @@ df_itcrm = fetch_itcrm_excel()
 df_us_cpi = fetch_us_cpi()
 df_fed = fetch_tasa_fed()
 df_bandas = fetch_bandas_cambiarias()
-
-df_macro = fetch_macro_gob_ar()
+df_rp = fetch_riesgo_pais()
 
 df_mensual = pd.DataFrame(columns=['fecha'])
 
@@ -333,7 +277,7 @@ if not df_bandas.empty:
     df_bandas_m['fecha'] = df_bandas_m['periodo'].dt.strftime('%Y-%m')
     df_mensual = pd.merge(df_mensual, df_bandas_m[['fecha', 'banda_inferior', 'banda_superior']], on='fecha', how='outer')
 
-for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_fed, df_macro]:
+for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_fed]:
     if not df_externo.empty:
         df_ext = df_externo.copy()
         df_ext['fecha'] = pd.to_datetime(df_ext['fecha'], errors='coerce')
@@ -344,9 +288,30 @@ for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_fed, df_macro]:
         df_ext['fecha'] = df_ext['periodo'].dt.strftime('%Y-%m')
         df_mensual = pd.merge(df_mensual, df_ext.drop(columns=['periodo']), on='fecha', how='outer')
 
-if len(df_mensual.columns) > 1:
+if not df_rp.empty:
+    df_rp_m = df_rp.copy()
+    df_rp_m['periodo'] = df_rp_m['fecha'].dt.to_period('M')
+    df_rp_m = df_rp_m.groupby('periodo').last().reset_index()
+    df_rp_m['fecha'] = df_rp_m['periodo'].dt.strftime('%Y-%m')
+    df_mensual = pd.merge(df_mensual, df_rp_m[['fecha', 'riesgo_pais']], on='fecha', how='outer')
+
+if not df_mensual.empty:
+    df_mensual = df_mensual.dropna(subset=['fecha'])
+    df_mensual = df_mensual.set_index('fecha')
+
+if not df_mensual_old.empty:
+    if not df_mensual.empty:
+        df_mensual = df_mensual.combine_first(df_mensual_old)
+    else:
+        df_mensual = df_mensual_old.copy()
+        
+if not df_mensual.empty:
+    if df_mensual.index.name == 'fecha':
+        df_mensual = df_mensual.reset_index()
+    df_mensual = df_mensual.dropna(subset=['fecha'])
     df_mensual = df_mensual.sort_values('fecha').ffill()
-    
+
+if len(df_mensual.columns) > 1:
     usd_cols = ['depositos_usd', 'prestamos_usd', 'reservas', 'compra_divisas']
     for col in usd_cols:
         if col in df_mensual.columns:
@@ -357,7 +322,7 @@ if len(df_mensual.columns) > 1:
         df_mensual['us_cpi_index'] = df_mensual['us_cpi'] / last_cpi
         for col in usd_cols:
             if col in df_mensual.columns:
-                df_mensual[col] = df_mensual[col] / df_mensual['us_cpi_index']
+                df_mensual[col] = df_mensual[col + '_corriente'] / df_mensual['us_cpi_index']
     
     if 'ipc_mensual' in df_mensual.columns:
         index_vals = [1.0]
@@ -374,29 +339,56 @@ if len(df_mensual.columns) > 1:
         for col in ars_cols:
             if col in df_mensual.columns:
                 df_mensual[col + '_corriente'] = df_mensual[col] 
-                df_mensual[col] = df_mensual[col] / df_mensual['ipc_index']
+                df_mensual[col] = df_mensual[col + '_corriente'] / df_mensual['ipc_index']
                 
     if 'tc_mayorista_corriente' in df_mensual.columns: df_mensual['tc_mayorista_var'] = df_mensual['tc_mayorista_corriente'].pct_change() * 100
     if 'tc_minorista_corriente' in df_mensual.columns:
         if 'dolar_mep_corriente' in df_mensual.columns: df_mensual['brecha_mep'] = ((df_mensual['dolar_mep_corriente'] / df_mensual['tc_minorista_corriente']) - 1) * 100
         if 'dolar_blue_corriente' in df_mensual.columns: df_mensual['brecha_blue'] = ((df_mensual['dolar_blue_corriente'] / df_mensual['tc_minorista_corriente']) - 1) * 100
     if 'rem_interanual' in df_mensual.columns: df_mensual['rem_interanual'] = df_mensual['rem_interanual'].shift(12)
-    df_mensual = df_mensual.where(pd.notnull(df_mensual), None).tail(240)
+    df_mensual = df_mensual.where(pd.notnull(df_mensual), None).tail(300)
 
+# --- CONSTRUCCIÓN DATASET DIARIO ---
 df_diario = pd.DataFrame(columns=['fecha'])
+
 for id_var, nombre in VARS_DIARIO.items():
     df_temp = fetch_bcra_history(id_var, nombre, is_daily=True)
-    if not df_temp.empty: df_diario = pd.merge(df_diario, df_temp, on='fecha', how='outer')
+    if not df_temp.empty: 
+        df_diario = pd.merge(df_diario, df_temp, on='fecha', how='outer')
+
+# SEGURO ANTI-FALLOS: Nos aseguramos que las columnas existan
+for nombre in VARS_DIARIO.values():
+    if nombre not in df_diario.columns:
+        df_diario[nombre] = float('nan')
 
 if not df_bandas.empty:
     df_bandas_d = df_bandas.copy()
     df_bandas_d['fecha'] = df_bandas_d['fecha'].dt.strftime('%Y-%m-%d')
     df_diario = pd.merge(df_diario, df_bandas_d, on='fecha', how='outer')
 
-if not df_diario.empty: 
-    df_diario = df_diario.sort_values('fecha').ffill().where(pd.notnull(df_diario), None).tail(250)
+if not df_rp.empty:
+    df_rp_d = df_rp.copy()
+    df_rp_d['fecha'] = df_rp_d['fecha'].dt.strftime('%Y-%m-%d')
+    df_diario = pd.merge(df_diario, df_rp_d, on='fecha', how='outer')
 
-json_path = os.path.join(BASE_DIR, 'datos_historicos.json')
+if not df_diario.empty:
+    df_diario = df_diario.dropna(subset=['fecha'])
+    df_diario = df_diario.set_index('fecha')
+
+if not df_diario_old.empty:
+    if not df_diario.empty:
+        df_diario = df_diario.combine_first(df_diario_old)
+    else:
+        df_diario = df_diario_old.copy()
+
+if not df_diario.empty:
+    if df_diario.index.name == 'fecha':
+        df_diario = df_diario.reset_index()
+    
+    # Limpiamos, rellenamos y aumentamos el límite a 1000 para no perder datos históricos
+    df_diario = df_diario.dropna(subset=['fecha'])
+    df_diario = df_diario.sort_values('fecha').ffill().where(pd.notnull(df_diario), None).tail(1000)
+
 with open(json_path, 'w', encoding='utf-8') as f: 
     json.dump({'mensual': df_mensual.to_dict(orient='list') if len(df_mensual.columns) > 1 else {}, 'diario': df_diario.to_dict(orient='list') if len(df_diario.columns) > 1 else {}}, f)
 print(f"\n¡ÉXITO ABSOLUTO! Datos guardados en {json_path}")

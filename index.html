@@ -62,7 +62,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
 
 <div class="header">
     <h1 style="font-weight:900;margin:0 0 0.5rem 0;">Dashboard CEER</h1>
-    <p style="font-weight:600;margin:0;">Alimentado por: BCRA, Datos.gob.ar, BLS y NY Fed</p>
+    <p style="font-weight:600;margin:0;">Alimentado por: BCRA, BLS y NY Fed</p>
 </div>
 
 <div class="container">
@@ -80,7 +80,6 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
     <div class="tabs-header" role="tablist">
         <button class="tab-btn active" role="tab" aria-selected="true" onclick="verTab(event,'bancarias')"><i class="fas fa-university"></i> Sector Bancario</button>
         <button class="tab-btn" role="tab" aria-selected="false" onclick="verTab(event,'macro')"><i class="fas fa-globe"></i> Macroeconomía</button>
-        <button class="tab-btn" role="tab" aria-selected="false" onclick="verTab(event,'actividad')"><i class="fas fa-industry"></i> Actividad</button>
         <button class="tab-btn" role="tab" aria-selected="false" onclick="verTab(event,'monetarias')"><i class="fas fa-coins"></i> Política Monetaria</button>
         <button class="tab-btn" role="tab" aria-selected="false" onclick="verTab(event,'generador')" style="color:#10b981;"><i class="fas fa-magic"></i> Generador Pro</button>
     </div>
@@ -92,17 +91,13 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
     </div></div>
 
     <div id="macro" class="tab-content"><div class="chart-grid">
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Riesgo País (Puntos Básicos)</h3><div class="card-tools"><button onclick="dlPNG('chartRiesgoPais')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartRiesgoPais')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartRiesgoPais"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tipo de Cambio Real (General Base 100)</h3><div class="card-tools"><button onclick="dlPNG('chartITCRM')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartITCRM')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartITCRM"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Reservas vs. Compras BCRA (M. USD Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartReservas')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartReservas')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartReservas"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Devaluación Mayorista vs Inflación (%)</h3><div class="card-tools"><button onclick="dlPNG('chartCarrera')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartCarrera')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartCarrera"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Expectativas: IPC Real vs Proyección REM 12m</h3><div class="card-tools"><button onclick="dlPNG('chartIPC')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartIPC')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartIPC"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tasa de la FED (EFFR %)</h3><div class="card-tools"><button onclick="dlPNG('chartFED')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartFED')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartFED"></canvas></div></div>
-    </div></div>
-
-    <div id="actividad" class="tab-content"><div class="chart-grid">
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Actividad Económica (EMAE Desestacionalizado)</h3><div class="card-tools"><button onclick="dlPNG('chartEmae')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartEmae')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartEmae"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tasa de Desempleo (%)</h3><div class="card-tools"><button onclick="dlPNG('chartDesempleo')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartDesempleo')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartDesempleo"></canvas></div></div>
     </div></div>
 
     <div id="monetarias" class="tab-content"><div class="chart-grid">
@@ -135,8 +130,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
 
     const DICT = {
         'bandas':{l:'Bandas Cambiarias (ARS/USD)', cD:true, isU:false},
-        'emae':{l:'EMAE Desest. (Base 2004=100)', cD:false, isU:false},
-        'desempleo':{l:'Desempleo (%)', cD:false, isU:false},
+        'riesgo_pais':{l:'Riesgo País (Puntos Básicos)', cD:false, isU:false},
         'tasa_fed':{l:'Tasa FED (EFFR %)', cD:false, isU:false},
         'tc_minorista':{l:'T.C. Minorista (ARS/USD)', cD:true, isU:false},'tc_mayorista':{l:'T.C. Mayorista (ARS/USD)', cD:true, isU:false},'dolar_mep':{l:'Dólar MEP (ARS/USD)', cD:true, isU:false},'dolar_blue':{l:'Dólar Blue (ARS/USD)', cD:true, isU:false},
         'brecha_mep':{l:'Brecha MEP (%)', cD:false, isU:false},'brecha_blue':{l:'Brecha Blue (%)', cD:false, isU:false},
@@ -236,7 +230,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         
         let sources = new Set();
         const addSrc = (v, n) => {
-            if (v === 'emae' || v === 'desempleo') sources.add('Datos.gob.ar');
+            if (v === 'riesgo_pais') sources.add('Ámbito');
             else if (v === 'tasa_fed') sources.add('NY Fed');
             else {
                 sources.add('BCRA');
@@ -364,6 +358,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
             buildC('chartDepositos', [{label:'Plazo Fijo',data:m('plazo_fijo'),backgroundColor:'#1e3a8a',fill:true,stacked:true},{label:'Cajas Ahorro',data:m('ca'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Cuentas Ctes',data:m('cc'),backgroundColor:'#93c5fd',fill:true,stacked:true}], {}, true);
             buildC('chartUSD', [{label:'Depósitos (USD Nominales)',data:getNom('depositos_usd'),borderColor:'#10b981',borderWidth:3},{label:'Préstamos (USD Nominales)',data:getNom('prestamos_usd'),borderColor:'#1e3a8a',borderWidth:3}]);
             
+            buildC('chartRiesgoPais', [{label:'Riesgo País',data:m('riesgo_pais'),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.2)',fill:true,borderWidth:3}], {}, false, false, 'Fuente: CEER en base a Ámbito / ArgentinaDatos');
             buildC('chartBrecha', [{label:'Brecha Blue (%)',data:m('brecha_blue'),backgroundColor:'rgba(37,99,235,0.25)',borderColor:'#2563eb',fill:true,yAxisID:'y',borderWidth:2},{label:'Brecha MEP (%)',data:m('brecha_mep'),backgroundColor:'rgba(16,185,129,0.25)',borderColor:'#10b981',fill:true,yAxisID:'y',borderWidth:2}]);
             buildC('chartITCRM', [{label:'ITCRM General',data:m('itcrm'),borderColor:'#1e3a8a',borderWidth:3}]);
             buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:'#1e3a8a',yAxisID:'y',borderWidth:3},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:(c)=>c.raw<0?'#ef4444':'#10b981'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y BLS');
@@ -371,9 +366,6 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
             buildC('chartIPC', [{label:'IPC Interanual',data:m('ipc_interanual'),borderColor:'#ef4444',borderWidth:3},{label:'REM 12m',data:m('rem_interanual'),borderColor:'#1e3a8a',borderDash:[5,5],borderWidth:3}]);
             buildC('chartFED', [{label:'Tasa FED (EFFR %)',data:m('tasa_fed'),borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.2)',fill:true,borderWidth:3}], {}, false, false, 'Fuente: CEER en base a NY Fed');
 
-            buildC('chartEmae', [{label:'EMAE Desestacionalizado',data:m('emae'),borderColor:'#10b981',borderWidth:3}], {}, false, false, 'Fuente: CEER en base a Datos.gob.ar');
-            buildC('chartDesempleo', [{label:'Tasa de Desempleo (%)',data:m('desempleo'),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.2)',fill:true,borderWidth:3}], {}, false, false, 'Fuente: CEER en base a Datos.gob.ar');
-            
             buildC('chartAgregados', [{label:'M2',data:m('m2'),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.2)',fill:true,borderWidth:3},{label:'Base Monetaria',data:m('base_monetaria'),borderColor:'#1e3a8a',backgroundColor:'rgba(30,58,138,0.2)',fill:true,borderWidth:3}]);
             buildC('chartTasas', [{label:'Tasa Política',data:m('tasa_politica_tea'),borderColor:'#1e3a8a',borderWidth:3,yAxisID:'y'},{label:'BADLAR',data:m('badlar_tea'),borderColor:'#2563eb',borderWidth:3,yAxisID:'y'},{label:'IPC Mensual',data:m('ipc_mensual'),backgroundColor:'rgba(239,68,68,0.15)',type:'bar',yAxisID:'y1'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
             buildC('chartDiario', [{label:'BADLAR',data:d('badlar_tea'),borderColor:'#2563eb',borderWidth:2},{label:'TAMAR',data:d('tamar_tea'),borderColor:'#3b82f6',borderWidth:2}]);
