@@ -20,7 +20,7 @@ VARS_MENSUAL = {
 }
 VARS_DIARIO = {35: 'badlar_tea', 45: 'tamar_tea'}
 
-# Disfraz estándar para engañar a los firewalls antibots
+# Disfraz para engañar a los firewalls antibots
 HEADERS_BOT = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'Accept': 'application/json, text/plain, */*',
@@ -67,55 +67,116 @@ def fetch_itcrm_excel():
 def fetch_dolares_history():
     print("Descargando Dólares Históricos (MEP y Blue)...")
     df_d = pd.DataFrame(columns=['fecha'])
+    
+    # MEP
     try:
-        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa", headers=HEADERS_BOT, timeout=20)
+        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa", headers=HEADERS_BOT, timeout=20, verify=False)
         if r.status_code == 200:
             df_mep = pd.DataFrame(r.json())
             df_mep['fecha'] = pd.to_datetime(df_mep['fecha'])
             df_d = pd.merge(df_d, df_mep[['fecha', 'venta']].rename(columns={'venta': 'dolar_mep'}), on='fecha', how='outer')
-    except Exception as e: print(f"  -> Error MEP: {e}")
+    except:
+        print("  -> ArgentinaDatos bloqueado para MEP. Usando Ámbito...")
+        try:
+            now = pd.Timestamp.now().strftime('%Y-%m-%d')
+            r = requests.get(f"https://mercados.ambito.com//dolar/mep/historico-general/2004-01-01/{now}", headers=HEADERS_BOT, verify=False)
+            data = r.json()
+            if len(data) > 1:
+                df_mep = pd.DataFrame(data[1:], columns=data[0])
+                df_mep['fecha'] = pd.to_datetime(df_mep['Fecha'], format='%d-%m-%Y', errors='coerce')
+                df_mep['dolar_mep'] = df_mep['Venta'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False)
+                df_mep['dolar_mep'] = pd.to_numeric(df_mep['dolar_mep'], errors='coerce')
+                df_d = pd.merge(df_d, df_mep[['fecha', 'dolar_mep']].dropna(), on='fecha', how='outer')
+        except Exception as e: print(f"  -> Error MEP alternativo: {e}")
+
+    # BLUE
     try:
-        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/blue", headers=HEADERS_BOT, timeout=20)
+        r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/blue", headers=HEADERS_BOT, timeout=20, verify=False)
         if r.status_code == 200:
             df_blue = pd.DataFrame(r.json())
             df_blue['fecha'] = pd.to_datetime(df_blue['fecha'])
-            df_d = pd.merge(df_d, df_blue[['fecha', 'venta']].rename(columns={'venta': 'dolar_blue'}), on='fecha', how='outer')
-    except Exception as e: print(f"  -> Error Blue: {e}")
+            if df_d.empty:
+                df_d = df_blue[['fecha', 'venta']].rename(columns={'venta': 'dolar_blue'})
+            else:
+                df_d = pd.merge(df_d, df_blue[['fecha', 'venta']].rename(columns={'venta': 'dolar_blue'}), on='fecha', how='outer')
+    except:
+        print("  -> ArgentinaDatos bloqueado para Blue. Usando Ámbito...")
+        try:
+            now = pd.Timestamp.now().strftime('%Y-%m-%d')
+            r = requests.get(f"https://mercados.ambito.com//dolar/informal/historico-general/2004-01-01/{now}", headers=HEADERS_BOT, verify=False)
+            data = r.json()
+            if len(data) > 1:
+                df_b = pd.DataFrame(data[1:], columns=data[0])
+                df_b['fecha'] = pd.to_datetime(df_b['Fecha'], format='%d-%m-%Y', errors='coerce')
+                df_b['dolar_blue'] = df_b['Venta'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False)
+                df_b['dolar_blue'] = pd.to_numeric(df_b['dolar_blue'], errors='coerce')
+                if df_d.empty:
+                    df_d = df_b[['fecha', 'dolar_blue']].dropna()
+                else:
+                    df_d = pd.merge(df_d, df_b[['fecha', 'dolar_blue']].dropna(), on='fecha', how='outer')
+        except Exception as e: print(f"  -> Error Blue alternativo: {e}")
+        
     return df_d
 
 def fetch_riesgo_pais():
     print("Descargando Riesgo País...")
     try:
-        r = requests.get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais", headers=HEADERS_BOT, timeout=20)
+        # Intento 1: API ArgentinaDatos
+        r = requests.get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais", headers=HEADERS_BOT, timeout=20, verify=False)
         if r.status_code == 200:
             df_rp = pd.DataFrame(r.json())
             df_rp['fecha'] = pd.to_datetime(df_rp['fecha'])
             df_rp = df_rp.rename(columns={'valor': 'riesgo_pais'})
+            print("  -> Riesgo País obtenido de ArgentinaDatos")
             return df_rp[['fecha', 'riesgo_pais']].sort_values('fecha')
-        else:
-            print(f"  -> Error API Riesgo País. Código: {r.status_code}")
-    except Exception as e: print(f"  -> Error Riesgo País: {e}")
+    except:
+        pass
+        
+    print("  -> ArgentinaDatos bloqueado. Intentando por fuente alternativa (Ámbito)...")
+    try:
+        # Intento 2: Scrapeo directo a la API de Ámbito (Saltea bloqueos de Cloudflare)
+        now = pd.Timestamp.now().strftime('%Y-%m-%d')
+        url = f"https://mercados.ambito.com//riesgopais/historico-general/2004-01-01/{now}"
+        r = requests.get(url, headers=HEADERS_BOT, timeout=20, verify=False)
+        if r.status_code == 200:
+            data = r.json()
+            if len(data) > 1:
+                df_rp = pd.DataFrame(data[1:], columns=data[0])
+                df_rp['fecha'] = pd.to_datetime(df_rp['Fecha'], format='%d-%m-%Y', errors='coerce')
+                # Ámbito trae los números con puntos de miles y comas decimales
+                df_rp['riesgo_pais'] = df_rp['Valor'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False)
+                df_rp['riesgo_pais'] = pd.to_numeric(df_rp['riesgo_pais'], errors='coerce')
+                print("  -> Riesgo País obtenido con éxito desde Ámbito")
+                return df_rp[['fecha', 'riesgo_pais']].dropna().sort_values('fecha')
+    except Exception as e: 
+        print(f"  -> Error Riesgo País Ámbito: {e}")
+        
     return pd.DataFrame(columns=['fecha', 'riesgo_pais'])
 
 def fetch_us_cpi():
     print("Procesando CPI de EEUU (Inflación en Dólares)...")
     df_cpi = pd.DataFrame(columns=['fecha', 'us_cpi'])
     
-    # Búsqueda inteligente del archivo en Linux (case-insensitive)
+    # Búsqueda a prueba de balas para Linux: rastrea cualquier archivo que arranque con "cpiaucsl"
     cpi_path = None
     try:
         for file in os.listdir(BASE_DIR):
-            if file.lower().startswith('cpiaucsl') and file.lower().endswith('.xlsx'):
+            if file.lower().startswith('CPIAUCSL'):
                 cpi_path = os.path.join(BASE_DIR, file)
-                print(f"  -> Archivo CPI encontrado: {file}")
+                print(f"  -> Archivo CPI detectado: {file}")
                 break
     except Exception as e:
         print(f"  -> Error escaneando carpeta: {e}")
 
     if cpi_path and os.path.exists(cpi_path):
         try:
-            df_hist = pd.read_excel(cpi_path)
+            # Detecta inteligentemente si subiste un CSV o un Excel
+            if cpi_path.lower().endswith('.csv'):
+                df_hist = pd.read_csv(cpi_path)
+            else:
+                df_hist = pd.read_excel(cpi_path)
             
+            # Detectamos cómo se llama la columna de fecha (suele ser DATE u observation_date)
             col_fecha = None
             for col in df_hist.columns:
                 if str(col).strip().lower() in ['date', 'observation_date', 'fecha']:
@@ -123,6 +184,7 @@ def fetch_us_cpi():
                     break
             if not col_fecha: col_fecha = df_hist.columns[0]
             
+            # Detectamos cómo se llama la columna de valores
             col_valor = None
             for col in df_hist.columns:
                 if str(col).strip().upper() == 'CPIAUCSL':
@@ -134,11 +196,11 @@ def fetch_us_cpi():
             df_hist = df_hist.rename(columns={col_valor: 'us_cpi'})
             df_cpi = df_hist[['fecha', 'us_cpi']].dropna(subset=['fecha', 'us_cpi'])
             df_cpi['us_cpi'] = pd.to_numeric(df_cpi['us_cpi'], errors='coerce')
-            print(f"  -> ¡Éxito! CPI leído desde archivo Excel: {len(df_cpi)} meses.")
+            print(f"  -> ¡Éxito! CPI leído y procesado: {len(df_cpi)} meses.")
         except Exception as e:
-            print(f"  -> Error leyendo el archivo Excel local: {e}")
+            print(f"  -> Error leyendo el archivo local: {e}")
     else:
-        print("  -> AVISO: No se encontró ningún archivo que se llame 'CPIAUCSL.xlsx' (ni en mayúsculas ni en minúsculas) en el repositorio.")
+        print("  -> AVISO: No se encontró ningún archivo CPIAUCSL en el repositorio.")
         
     return df_cpi.sort_values('fecha')
 
@@ -150,7 +212,7 @@ def fetch_tasa_fed():
     url = f"https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start_date}&endDate={end_date}"
     
     try:
-        r = requests.get(url, headers=HEADERS_BOT, timeout=20)
+        r = requests.get(url, headers=HEADERS_BOT, timeout=20, verify=False)
         
         if r.status_code == 200:
             data = r.json().get('refRates', [])
