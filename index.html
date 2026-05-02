@@ -62,7 +62,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
 
 <div class="header">
     <h1 style="font-weight:900;margin:0 0 0.5rem 0;">Dashboard CEER</h1>
-    <p style="font-weight:600;margin:0;">Alimentado por: BCRA, BLS y NY Fed</p>
+    <p style="font-weight:600;margin:0;">Alimentado por: BCRA, BLS, FRED y Ámbito</p>
 </div>
 
 <div class="container">
@@ -92,7 +92,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
 
     <div id="macro" class="tab-content"><div class="chart-grid">
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Riesgo País (Puntos Básicos)</h3><div class="card-tools"><button onclick="dlPNG('chartRiesgoPais')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartRiesgoPais')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartRiesgoPais"></canvas></div></div>
-        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
+        <div class="chart-card"><div class="card-header"><h3 class="chart-title">Brecha Cambiaria: Blue vs MEP vs CCL (%)</h3><div class="card-tools"><button onclick="dlPNG('chartBrecha')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartBrecha')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartBrecha"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Tipo de Cambio Real (General Base 100)</h3><div class="card-tools"><button onclick="dlPNG('chartITCRM')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartITCRM')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartITCRM"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Reservas vs. Compras BCRA (M. USD Reales)</h3><div class="card-tools"><button onclick="dlPNG('chartReservas')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartReservas')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartReservas"></canvas></div></div>
         <div class="chart-card"><div class="card-header"><h3 class="chart-title">Devaluación Mayorista vs Inflación (%)</h3><div class="card-tools"><button onclick="dlPNG('chartCarrera')" aria-label="Descargar gráfico en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartCarrera')" aria-label="Descargar datos en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartCarrera"></canvas></div></div>
@@ -117,9 +117,13 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
                 <div class="gen-var-box"><h4 style="margin:0 0 1rem 0;color:var(--ceer-blue);">Variable 1 (Eje Y)</h4><div class="gen-control-group"><label for="genSelect1">Métrica:</label><select id="genSelect1" class="gen-select" onchange="chkDef(1)" aria-label="Seleccionar métrica 1"></select></div><div class="gen-control-group" id="wrapType1"><label for="genType1">Gráfico:</label><select id="genType1" class="gen-select" aria-label="Tipo de gráfico 1"><option value="line">Línea</option><option value="area">Área Pintada</option><option value="bar">Barras</option></select></div><div class="gen-control-group"><label for="genNom1">Nominalidad:</label><select id="genNom1" class="gen-select" aria-label="Nominalidad 1"><option value="corriente" selected>Precios Corrientes (Nominales)</option><option value="constante">Precios Constantes (Reales)</option></select></div></div>
                 <div class="gen-var-box" id="panelVar2" style="opacity:0.5;pointer-events:none;"><h4 style="margin:0 0 1rem 0;color:var(--ceer-blue);">Variable 2 (Eje X en Correlación)</h4><div class="gen-control-group"><label for="genSelect2">Métrica:</label><select id="genSelect2" class="gen-select" onchange="chkDef(2)" aria-label="Seleccionar métrica 2"></select></div><div class="gen-control-group" id="wrapType2"><label for="genType2">Gráfico:</label><select id="genType2" class="gen-select" aria-label="Tipo de gráfico 2"><option value="line">Línea</option><option value="area">Área Pintada</option><option value="bar">Barras</option></select></div><div class="gen-control-group"><label for="genNom2">Nominalidad:</label><select id="genNom2" class="gen-select" aria-label="Nominalidad 2"><option value="corriente" selected>Precios Corrientes (Nominales)</option><option value="constante">Precios Constantes (Reales)</option></select></div><label id="wrapAxis2" style="margin-top:1rem;display:flex;gap:0.5rem;"><input type="checkbox" id="genAxis2" checked aria-label="Usar eje secundario"> Eje Secundario</label></div>
             </div>
-            <button class="btn-action" style="width:100%;margin-top:1.5rem;background:#10b981;font-size:1.1rem;padding:1rem;" onclick="crearGen()" aria-label="Dibujar análisis"><i class="fas fa-chart-pie"></i> Dibujar Análisis</button>
+            <button class="btn-action" style="width:100%;margin-top:1.5rem;background:#10b981;font-size:1.1rem;padding:1rem;" onclick="crearGen()" aria-label="Dibujar Análisis"><i class="fas fa-chart-pie"></i> Dibujar Análisis</button>
         </div>
-        <div class="chart-card" id="resultadoGenerador" style="display:none;"><div class="card-header"><h3 class="chart-title">Resultado Analítico</h3><div class="card-tools"><button onclick="dlPNG('chartGenerador')" aria-label="Descargar gráfico generado en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartGenerador')" aria-label="Descargar datos generados en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div><div class="chart-container"><canvas id="chartGenerador"></canvas></div></div>
+        <div class="chart-card" id="resultadoGenerador" style="display:none;">
+            <div class="card-header"><h3 class="chart-title">Resultado Analítico</h3><div class="card-tools"><button onclick="dlPNG('chartGenerador')" aria-label="Descargar gráfico generado en formato PNG" title="Descargar PNG"><i class="fas fa-camera"></i></button><button onclick="dlCSV('chartGenerador')" aria-label="Descargar datos generados en formato CSV" title="Descargar CSV"><i class="fas fa-file-csv"></i></button></div></div>
+            <!-- Contenedor base para recrear el canvas sin errores de ghosting -->
+            <div class="chart-container" id="canvasContainer"><canvas id="chartGenerador"></canvas></div>
+        </div>
     </div>
 </div>
 
@@ -132,8 +136,9 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         'bandas':{l:'Bandas Cambiarias (ARS/USD)', cD:true, isU:false},
         'riesgo_pais':{l:'Riesgo País (Puntos Básicos)', cD:false, isU:false},
         'tasa_fed':{l:'Tasa FED (EFFR %)', cD:false, isU:false},
-        'tc_minorista':{l:'T.C. Minorista (ARS/USD)', cD:true, isU:false},'tc_mayorista':{l:'T.C. Mayorista (ARS/USD)', cD:true, isU:false},'dolar_mep':{l:'Dólar MEP (ARS/USD)', cD:true, isU:false},'dolar_blue':{l:'Dólar Blue (ARS/USD)', cD:true, isU:false},
-        'brecha_mep':{l:'Brecha MEP (%)', cD:false, isU:false},'brecha_blue':{l:'Brecha Blue (%)', cD:false, isU:false},
+        'tc_minorista':{l:'T.C. Minorista (ARS/USD)', cD:true, isU:false},'tc_mayorista':{l:'T.C. Mayorista (ARS/USD)', cD:true, isU:false},
+        'dolar_mep':{l:'Dólar MEP (ARS/USD)', cD:true, isU:false},'dolar_blue':{l:'Dólar Blue (ARS/USD)', cD:true, isU:false},'dolar_ccl':{l:'Dólar CCL (ARS/USD)', cD:true, isU:false},
+        'brecha_mep':{l:'Brecha MEP (%)', cD:false, isU:false},'brecha_blue':{l:'Brecha Blue (%)', cD:false, isU:false},'brecha_ccl':{l:'Brecha CCL (%)', cD:false, isU:false},
         'itcrm':{l:'ITCRM General (Base 100)', cD:false, isU:false},'tcr_brasil':{l:'TCR Brasil', cD:false, isU:false},'tcr_usa':{l:'TCR EE.UU.', cD:false, isU:false},'tcr_zona_euro':{l:'TCR Euro', cD:false, isU:false},'tcr_china':{l:'TCR China', cD:false, isU:false},'tcr_mexico':{l:'TCR México', cD:false, isU:false},'tcr_chile':{l:'TCR Chile', cD:false, isU:false},'tcr_uruguay':{l:'TCR Uruguay', cD:false, isU:false},
         'base_monetaria':{l:'Base Monetaria (ARS)', cD:true, isU:false},'circulacion_monetaria':{l:'Circulación Monetaria (ARS)', cD:true, isU:false},'billetes_monedas':{l:'Billetes Público (ARS)', cD:true, isU:false},'m2':{l:'M2 Total (ARS)', cD:true, isU:false},'m2_transaccional':{l:'M2 Transaccional (ARS)', cD:true, isU:false},'pases_pasivos':{l:'Pases Pasivos (ARS)', cD:true, isU:false},'lefi':{l:'LEFI (ARS)', cD:true, isU:false},
         'tarjetas':{l:'Préstamos: Tarjetas (ARS)', cD:true, isU:false},'personales':{l:'Préstamos: Personales (ARS)', cD:true, isU:false},'hipotecarios':{l:'Préstamos: Hipotecarios (ARS)', cD:true, isU:false},'prendarios':{l:'Préstamos: Prendarios (ARS)', cD:true, isU:false},'plazo_fijo':{l:'Depósitos: Plazo Fijo (ARS)', cD:true, isU:false},'ca':{l:'Cajas Ahorro (ARS)', cD:true, isU:false},'cc':{l:'Cuentas Ctes (ARS)', cD:true, isU:false},
@@ -157,11 +162,37 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         let st_d=window.fechas_d[0], en_d=window.fechas_d[window.fechas_d.length-1];
         if(s){ let s_m=s.substring(0,7); st_m=window.fechas_m.find(f=>f>=s_m)||st_m; st_d=window.fechas_d.find(f=>f>=s)||st_d; }
         if(e){ let e_m=e.substring(0,7); en_m=[...window.fechas_m].reverse().find(f=>f<=e_m)||en_m; en_d=[...window.fechas_d].reverse().find(f=>f<=e)||en_d; }
+        
         window.allCharts.forEach(c=>{
-            if(c.options.scales.x && c.canvas.id !== 'chartGeneradorCorrelacion'){
-                c.options.scales.x.min = (c.canvas.id==='chartDiario')?st_d:st_m;
-                c.options.scales.x.max = (c.canvas.id==='chartDiario')?en_d:en_m;
-                c.update();
+            try {
+                if(c.options.scales.x && c.config.type !== 'scatter'){
+                    c.options.scales.x.min = (c.canvas.id==='chartDiario')?st_d:st_m;
+                    c.options.scales.x.max = (c.canvas.id==='chartDiario')?en_d:en_m;
+                    
+                    // EXCEPCIÓN 1: Fijar REM y Tasas al año 2000
+                    if (c.canvas.id === 'chartIPC' || c.canvas.id === 'chartTasas') {
+                        if (!s) c.options.scales.x.min = '2000-01';
+                    } else {
+                        // RECORTE INTELIGENTE: Que el eje empiece en el primer dato real existente
+                        if (c.data.labels && c.data.labels.length > 0) {
+                            let primerIndiceReal = c.data.labels.length;
+                            if (c.data.datasets) {
+                                c.data.datasets.forEach(ds => {
+                                    if (ds.data && Array.isArray(ds.data)) {
+                                        let idx = ds.data.findIndex(val => val !== null && val !== undefined && !Number.isNaN(val));
+                                        if(idx !== -1 && idx < primerIndiceReal) primerIndiceReal = idx;
+                                    }
+                                });
+                            }
+                            if (primerIndiceReal < c.data.labels.length && !s) {
+                                c.options.scales.x.min = c.data.labels[primerIndiceReal];
+                            }
+                        }
+                    }
+                    c.update();
+                }
+            } catch (err) {
+                console.error("Error ajustando fechas en gráfico:", c.canvas ? c.canvas.id : 'desconocido', err);
             }
         });
     }
@@ -197,113 +228,119 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
     }
 
     function crearGen(){
-        let v1_val = document.getElementById('genSelect1').value;
-        if(!v1_val) { alert("Por favor, seleccioná al menos una métrica para la Variable 1."); return; }
-        
-        if(document.querySelector('input[name="numVars"]:checked').value==='2'){
-            let v2_val = document.getElementById('genSelect2').value;
-            if(!v2_val) { alert("Por favor, seleccioná la métrica para la Variable 2."); return; }
-        }
-
-        document.getElementById('resultadoGenerador').style.display='block';
-        
-        if(window.cGen){ 
-            window.allCharts = window.allCharts.filter(c => c !== window.cGen); 
-            window.cGen.destroy(); 
-            window.cGen = null;
-        }
-        
-        const getD = (n) => { 
-            const v = document.getElementById(`genSelect${n}`).value; 
-            const quiereCorriente = document.getElementById(`genNom${n}`).value === 'corriente';
+        try {
+            let v1_val = document.getElementById('genSelect1').value;
+            if(!v1_val) { alert("Por favor, seleccioná al menos una métrica para la Variable 1."); return; }
             
-            if (v === 'bandas') {
-                let d_inf = window.data_m['banda_inferior' + (quiereCorriente ? '_corriente' : '')] || window.data_m['banda_inferior'];
-                let d_sup = window.data_m['banda_superior' + (quiereCorriente ? '_corriente' : '')] || window.data_m['banda_superior'];
-                return { isBanda: true, l: DICT[v].l + (quiereCorriente?' (Nominal)':''), d_inf: d_inf, d_sup: d_sup, t: 'line' }; 
+            if(document.querySelector('input[name="numVars"]:checked').value==='2'){
+                let v2_val = document.getElementById('genSelect2').value;
+                if(!v2_val) { alert("Por favor, seleccioná la métrica para la Variable 2."); return; }
             }
 
-            let dataFinal = window.data_m[v]; 
-            if (DICT[v].cD && quiereCorriente) { dataFinal = window.data_m[v+'_corriente'] || window.data_m[v]; }
-            return { isBanda: false, l: DICT[v].l + (DICT[v].cD && quiereCorriente?' (Nominal)':''), d: dataFinal, t: document.getElementById(`genType${n}`).value }; 
-        };
-        
-        let sources = new Set();
-        const addSrc = (v, n) => {
-            if (v === 'riesgo_pais') sources.add('Ámbito');
-            else if (v === 'tasa_fed') sources.add('NY Fed');
-            else {
-                sources.add('BCRA');
-                if (DICT[v].isU && document.getElementById(`genNom${n}`).value === 'constante') sources.add('BLS');
+            document.getElementById('resultadoGenerador').style.display='block';
+            
+            // LA TÉCNICA "NUKE AND PAVE": Destruimos físicamente el elemento canvas viejo 
+            // para asegurar que no haya cruces de identidades ni gráficos fantasmas.
+            if(window.cGen){ 
+                window.allCharts = window.allCharts.filter(c => c !== window.cGen); 
+                window.cGen.destroy(); 
+                window.cGen = null;
             }
-        };
-        
-        addSrc(v1_val, 1);
-        if(document.querySelector('input[name="numVars"]:checked').value==='2') addSrc(document.getElementById('genSelect2').value, 2);
-        
-        let sArr = Array.from(sources);
-        let fuenteSTR = 'Fuente: CEER en base a ' + (sArr.length === 1 ? sArr[0] : sArr.length === 2 ? sArr[0] + ' y ' + sArr[1] : sArr[0] + ', ' + sArr[1] + ' y ' + sArr[2]);
+            document.getElementById('canvasContainer').innerHTML = '<canvas id="chartGenerador"></canvas>';
+            
+            const getD = (n) => { 
+                const v = document.getElementById(`genSelect${n}`).value; 
+                const quiereCorriente = document.getElementById(`genNom${n}`).value === 'corriente';
+                
+                if (v === 'bandas') {
+                    let d_inf = window.data_m['banda_inferior' + (quiereCorriente ? '_corriente' : '')] || window.data_m['banda_inferior'];
+                    let d_sup = window.data_m['banda_superior' + (quiereCorriente ? '_corriente' : '')] || window.data_m['banda_superior'];
+                    return { isBanda: true, l: DICT[v].l + (quiereCorriente?' (Nominal)':''), d_inf: d_inf || [], d_sup: d_sup || [], t: 'line' }; 
+                }
 
-        let isSc = document.getElementById('genModo').value === 'scatter';
-        let d1 = getD(1);
-        
-        if(isSc){
-            let d2=getD(2);
-            if (d1.isBanda || d2.isBanda) {
-                alert("Las Bandas Cambiarias no se pueden usar en Gráficos de Correlación. Elegí Línea de Tiempo o cambiá la métrica."); return;
-            }
-
-            let pts=[];
-            for(let i=0; i<Math.min(d1.d.length, d2.d.length); i++){
-                if(d1.d[i]!=null && d2.d[i]!=null) pts.push({y:d1.d[i], x:d2.d[i], label:window.fechas_m[i]});
-            }
+                let dataFinal = window.data_m[v] || []; 
+                if (DICT[v].cD && quiereCorriente) { dataFinal = window.data_m[v+'_corriente'] || window.data_m[v] || []; }
+                return { isBanda: false, l: DICT[v].l + (DICT[v].cD && quiereCorriente?' (Nominal)':''), d: dataFinal, t: document.getElementById(`genType${n}`).value }; 
+            };
             
-            if(pts.length < 2) {
-                alert("No hay suficientes datos superpuestos en el tiempo entre ambas variables para calcular una correlación.");
-                return;
-            }
-
-            let n=pts.length, sX=0, sY=0, sXY=0, sXX=0, sYY=0;
-            pts.forEach(p=>{ sX+=p.x; sY+=p.y; sXY+=p.x*p.y; sXX+=p.x*p.x; sYY+=p.y*p.y; });
-            let slope = (n*sXY - sX*sY)/(n*sXX - sX*sX); let intercept = (sY - slope*sX)/n;
-            let r2 = Math.pow((n*sXY - sX*sY)/Math.sqrt((n*sXX - sX*sX)*(n*sYY - sY*sY)), 2);
-            if(isNaN(r2)) r2 = 0; 
-            
-            let minX = Math.min(...pts.map(p=>p.x)), maxX = Math.max(...pts.map(p=>p.x));
-            
-            let d = [
-                {type:'scatter', label:'Observaciones', data:pts, backgroundColor:'rgba(30,58,138,0.6)', pointRadius:5, hoverRadius:8},
-                {type:'line', label:`Regresión (R² = ${r2.toFixed(4)})`, data:[{x:minX,y:slope*minX+intercept},{x:maxX,y:slope*maxX+intercept}], borderColor:'#ef4444', borderWidth:3, pointRadius:0, fill:false}
-            ];
-            
-            document.getElementById('chartGenerador').id = 'chartGeneradorCorrelacion';
-            window.cGen = buildC('chartGeneradorCorrelacion', d, {x:{type:'linear',position:'bottom',title:{display:true,text:d2.l,font:{weight:'bold'}}},y:{title:{display:true,text:d1.l,font:{weight:'bold'}}}}, false, true, fuenteSTR);
-        } else {
-            if(document.getElementById('chartGeneradorCorrelacion')) document.getElementById('chartGeneradorCorrelacion').id = 'chartGenerador';
-            let d=[];
-            
-            const addDataset = (dObj, colorMain, yAxisID) => {
-                if (dObj.isBanda) {
-                    let colorBg = colorMain === '#1e3a8a' ? 'rgba(30,58,138,0.2)' : 'rgba(239,68,68,0.2)';
-                    d.push({label: dObj.l + ' (Sup)', data: dObj.d_sup, borderColor: colorMain, backgroundColor: 'transparent', type: 'line', borderWidth: 2, yAxisID: yAxisID, pointRadius:0});
-                    d.push({label: dObj.l + ' (Inf)', data: dObj.d_inf, borderColor: colorMain, backgroundColor: colorBg, type: 'line', borderWidth: 2, yAxisID: yAxisID, fill: '-1', pointRadius:0});
-                } else {
-                    let bg = dObj.t !== 'line' ? (colorMain === '#1e3a8a' ? 'rgba(30,58,138,0.4)' : 'rgba(239,68,68,0.4)') : null;
-                    d.push({label: dObj.l, data: dObj.d, borderColor: colorMain, backgroundColor: bg, type: dObj.t === 'area' ? 'line' : dObj.t, fill: dObj.t === 'area', borderWidth: 3, yAxisID: yAxisID});
+            let sources = new Set();
+            const addSrc = (v, n) => {
+                if (v === 'riesgo_pais') sources.add('Ámbito');
+                else if (v === 'tasa_fed') sources.add('NY Fed');
+                else {
+                    sources.add('BCRA');
+                    if (DICT[v].isU && document.getElementById(`genNom${n}`).value === 'constante') sources.add('BLS');
                 }
             };
+            
+            addSrc(v1_val, 1);
+            if(document.querySelector('input[name="numVars"]:checked').value==='2') addSrc(document.getElementById('genSelect2').value, 2);
+            
+            let sArr = Array.from(sources);
+            let fuenteSTR = 'Fuente: CEER en base a ' + (sArr.length === 1 ? sArr[0] : sArr.length === 2 ? sArr[0] + ' y ' + sArr[1] : sArr[0] + ', ' + sArr[1] + ' y ' + sArr[2]);
 
-            addDataset(d1, '#1e3a8a', 'y');
-            let y1={display:false};
-            if(document.querySelector('input[name="numVars"]:checked').value==='2'){
-                let d2=getD(2), u2=document.getElementById('genAxis2').checked;
-                addDataset(d2, '#ef4444', u2 ? 'y1' : 'y');
-                if(u2) y1={type:'linear',position:'right',grid:{display:false},border:{display:false},ticks:{font:{weight:'bold'}}};
+            let isSc = document.getElementById('genModo').value === 'scatter';
+            let d1 = getD(1);
+            
+            if(isSc){
+                let d2=getD(2);
+                if (d1.isBanda || d2.isBanda) {
+                    alert("Las Bandas Cambiarias no se pueden usar en Gráficos de Correlación. Elegí Línea de Tiempo o cambiá la métrica."); return;
+                }
+
+                let pts=[];
+                for(let i=0; i<Math.min(d1.d.length, d2.d.length); i++){
+                    if(d1.d[i]!=null && d2.d[i]!=null) pts.push({y:d1.d[i], x:d2.d[i], label:window.fechas_m[i]});
+                }
+                
+                if(pts.length < 2) {
+                    alert("No hay suficientes datos superpuestos en el tiempo entre ambas variables para calcular una correlación.");
+                    return;
+                }
+
+                let n=pts.length, sX=0, sY=0, sXY=0, sXX=0, sYY=0;
+                pts.forEach(p=>{ sX+=p.x; sY+=p.y; sXY+=p.x*p.y; sXX+=p.x*p.x; sYY+=p.y*p.y; });
+                let slope = (n*sXY - sX*sY)/(n*sXX - sX*sX); let intercept = (sY - slope*sX)/n;
+                let r2 = Math.pow((n*sXY - sX*sY)/Math.sqrt((n*sXX - sX*sX)*(n*sYY - sY*sY)), 2);
+                if(isNaN(r2)) r2 = 0; 
+                
+                let minX = Math.min(...pts.map(p=>p.x)), maxX = Math.max(...pts.map(p=>p.x));
+                
+                let d = [
+                    {type:'scatter', label:'Observaciones', data:pts, backgroundColor:'rgba(30,58,138,0.6)', pointRadius:5, hoverRadius:8},
+                    {type:'line', label:`Regresión (R² = ${r2.toFixed(4)})`, data:[{x:minX,y:slope*minX+intercept},{x:maxX,y:slope*maxX+intercept}], borderColor:'#1e3a8a', borderWidth:3, pointRadius:0, fill:false}
+                ];
+                
+                window.cGen = buildC('chartGenerador', d, {x:{type:'linear',position:'bottom',title:{display:true,text:d2.l,font:{weight:'bold'}}},y:{title:{display:true,text:d1.l,font:{weight:'bold'}}}}, false, true, fuenteSTR);
+            } else {
+                let d=[];
+                
+                const addDataset = (dObj, colorMain, yAxisID) => {
+                    if (dObj.isBanda) {
+                        let colorBg = colorMain === '#1e3a8a' ? 'rgba(30,58,138,0.2)' : 'rgba(59,130,246,0.2)';
+                        d.push({label: dObj.l + ' (Sup)', data: dObj.d_sup, borderColor: colorMain, backgroundColor: 'transparent', type: 'line', borderWidth: 2, yAxisID: yAxisID, pointRadius:0});
+                        d.push({label: dObj.l + ' (Inf)', data: dObj.d_inf, borderColor: colorMain, backgroundColor: colorBg, type: 'line', borderWidth: 2, yAxisID: yAxisID, fill: '-1', pointRadius:0});
+                    } else {
+                        let bg = dObj.t !== 'line' ? (colorMain === '#1e3a8a' ? 'rgba(30,58,138,0.4)' : 'rgba(59,130,246,0.4)') : null;
+                        d.push({label: dObj.l, data: dObj.d, borderColor: colorMain, backgroundColor: bg, type: dObj.t === 'area' ? 'line' : dObj.t, fill: dObj.t === 'area', borderWidth: 3, yAxisID: yAxisID});
+                    }
+                };
+
+                addDataset(d1, '#1e3a8a', 'y');
+                let y1={display:false};
+                if(document.querySelector('input[name="numVars"]:checked').value==='2'){
+                    let d2=getD(2), u2=document.getElementById('genAxis2').checked;
+                    addDataset(d2, '#3b82f6', u2 ? 'y1' : 'y');
+                    if(u2) y1={type:'linear',position:'right',grid:{display:false},border:{display:false},ticks:{font:{weight:'bold'}}};
+                }
+                window.cGen = buildC('chartGenerador', d, {y1:y1}, false, false, fuenteSTR); 
+                filtrarTexto(); 
             }
-            window.cGen = buildC('chartGenerador', d, {y1:y1}, false, false, fuenteSTR); 
-            filtrarTexto(); 
+            document.getElementById('resultadoGenerador').scrollIntoView({behavior:'smooth'});
+        } catch (error) {
+            alert("Oops! Ocurrió un error al generar el gráfico. Detalle técnico: " + error.message);
+            console.error("Error en Generador Pro:", error);
         }
-        document.getElementById('resultadoGenerador').scrollIntoView({behavior:'smooth'});
     }
 
     function buildC(id, datasets, extraScales={}, stacked=false, isSc=false, fStr='Fuente: CEER en base a BCRA'){
@@ -324,11 +361,14 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
         window.allCharts.push(c); return c;
     }
 
-    function dlPNG(id){ const cv=document.getElementById(id) || document.getElementById('chartGeneradorCorrelacion'); const a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cv.id+'_ceer.png'; a.click(); }
+    function dlPNG(id){ 
+        const cv=document.getElementById(id); 
+        const a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cv.id+'_ceer.png'; a.click(); 
+    }
     
     function dlCSV(id){
-        const realId = document.getElementById(id) ? id : 'chartGeneradorCorrelacion';
-        const c=Chart.getChart(realId); if(!c) return; const d=c.data.datasets; let csv='';
+        const c=Chart.getChart(id); if(!c) return; 
+        const d=c.data.datasets; let csv='';
         if(c.config.type==='scatter'){
             csv=`"Mes","${c.options.scales.x.title.text} (X)","${c.options.scales.y.title.text} (Y)"\n`;
             d[0].data.forEach(p=>csv+=`"${p.label}",${p.x},${p.y}\n`);
@@ -338,7 +378,7 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
             csv='Fecha'; d.forEach(x=>csv+=`,"${x.label}"`); csv+='\n';
             for(let i=sI;i<=eI;i++){ csv+=l[i]; d.forEach(x=>{let v=x.data[i]; csv+=','+(v!==null&&v!==undefined?v:'');}); csv+='\n'; }
         }
-        const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download=realId+'_ceer.csv'; a.click();
+        const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download=id+'_ceer.csv'; a.click();
     }
 
     async function load(){
@@ -354,23 +394,30 @@ body.mobile-mode .tab-btn { padding: 0.8rem; font-size: 0.9rem; }
             
             const getNom = (k) => window.data_m[k+'_corriente'] ? window.data_m[k+'_corriente'] : (window.data_m[k] || []);
 
-            buildC('chartPrestamos', [{label:'Tarjetas',data:m('tarjetas'),backgroundColor:'#93c5fd',fill:true,stacked:true},{label:'Personales',data:m('personales'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Hipotecarios',data:m('hipotecarios'),backgroundColor:'#2563eb',fill:true,stacked:true},{label:'Prendarios',data:m('prendarios'),backgroundColor:'#1e3a8a',fill:true,stacked:true}], {}, true);
+            buildC('chartPrestamos', [{label:'Tarjetas',data:m('tarjetas'),backgroundColor:'#bfdbfe',fill:true,stacked:true},{label:'Personales',data:m('personales'),backgroundColor:'#93c5fd',fill:true,stacked:true},{label:'Hipotecarios',data:m('hipotecarios'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Prendarios',data:m('prendarios'),backgroundColor:'#1e3a8a',fill:true,stacked:true}], {}, true);
             buildC('chartDepositos', [{label:'Plazo Fijo',data:m('plazo_fijo'),backgroundColor:'#1e3a8a',fill:true,stacked:true},{label:'Cajas Ahorro',data:m('ca'),backgroundColor:'#3b82f6',fill:true,stacked:true},{label:'Cuentas Ctes',data:m('cc'),backgroundColor:'#93c5fd',fill:true,stacked:true}], {}, true);
-            buildC('chartUSD', [{label:'Depósitos (USD Nominales)',data:getNom('depositos_usd'),borderColor:'#10b981',borderWidth:3},{label:'Préstamos (USD Nominales)',data:getNom('prestamos_usd'),borderColor:'#1e3a8a',borderWidth:3}]);
+            buildC('chartUSD', [{label:'Depósitos (USD Nominales)',data:getNom('depositos_usd'),borderColor:'#3b82f6',borderWidth:3,fill:false},{label:'Préstamos (USD Nominales)',data:getNom('prestamos_usd'),borderColor:'#1e3a8a',borderWidth:3,fill:false}]);
             
-            buildC('chartRiesgoPais', [{label:'Riesgo País',data:m('riesgo_pais'),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.2)',fill:true,borderWidth:3}], {}, false, false, 'Fuente: CEER en base a Ámbito / ArgentinaDatos');
-            buildC('chartBrecha', [{label:'Brecha Blue (%)',data:m('brecha_blue'),backgroundColor:'rgba(37,99,235,0.25)',borderColor:'#2563eb',fill:true,yAxisID:'y',borderWidth:2},{label:'Brecha MEP (%)',data:m('brecha_mep'),backgroundColor:'rgba(16,185,129,0.25)',borderColor:'#10b981',fill:true,yAxisID:'y',borderWidth:2}]);
-            buildC('chartITCRM', [{label:'ITCRM General',data:m('itcrm'),borderColor:'#1e3a8a',borderWidth:3}]);
-            buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:'#1e3a8a',yAxisID:'y',borderWidth:3},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:(c)=>c.raw<0?'#ef4444':'#10b981'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y BLS');
-            buildC('chartCarrera', [{label:'Devaluación (%)',data:m('tc_mayorista_var'),borderColor:'#2563eb',borderWidth:3},{label:'IPC (%)',data:m('ipc_mensual'),borderColor:'#ef4444',borderWidth:3}]);
-            buildC('chartIPC', [{label:'IPC Interanual',data:m('ipc_interanual'),borderColor:'#ef4444',borderWidth:3},{label:'REM 12m',data:m('rem_interanual'),borderColor:'#1e3a8a',borderDash:[5,5],borderWidth:3}]);
-            buildC('chartFED', [{label:'Tasa FED (EFFR %)',data:m('tasa_fed'),borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.2)',fill:true,borderWidth:3}], {}, false, false, 'Fuente: CEER en base a NY Fed');
+            buildC('chartRiesgoPais', [{label:'Riesgo País',data:m('riesgo_pais'),borderColor:'#1e3a8a',fill:false,borderWidth:3}], {}, false, false, 'Fuente: CEER en base a Ámbito / ArgentinaDatos');
+            
+            buildC('chartBrecha', [
+                {label:'Brecha Blue (%)',data:m('brecha_blue'),borderColor:'#1e3a8a',fill:false,yAxisID:'y',borderWidth:2},
+                {label:'Brecha MEP (%)',data:m('brecha_mep'),borderColor:'#3b82f6',fill:false,yAxisID:'y',borderWidth:2},
+                {label:'Brecha CCL (%)',data:m('brecha_ccl'),borderColor:'#93c5fd',fill:false,yAxisID:'y',borderWidth:2}
+            ]);
+            
+            buildC('chartITCRM', [{label:'ITCRM General',data:m('itcrm'),borderColor:'#1e3a8a',fill:false,borderWidth:3}]);
+            buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:'#1e3a8a',yAxisID:'y',borderWidth:3,fill:false},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:'#93c5fd'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y BLS');
+            buildC('chartCarrera', [{label:'Devaluación (%)',data:m('tc_mayorista_var'),borderColor:'#1e3a8a',fill:false,borderWidth:3},{label:'IPC (%)',data:m('ipc_mensual'),borderColor:'#3b82f6',fill:false,borderWidth:3}]);
+            buildC('chartIPC', [{label:'IPC Interanual',data:m('ipc_interanual'),borderColor:'#1e3a8a',fill:false,borderWidth:3},{label:'REM 12m',data:m('rem_interanual'),borderColor:'#3b82f6',borderDash:[5,5],fill:false,borderWidth:3}]);
+            buildC('chartFED', [{label:'Tasa FED (EFFR %)',data:m('tasa_fed'),borderColor:'#1e3a8a',fill:false,borderWidth:3}], {}, false, false, 'Fuente: CEER en base a NY Fed');
 
-            buildC('chartAgregados', [{label:'M2',data:m('m2'),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.2)',fill:true,borderWidth:3},{label:'Base Monetaria',data:m('base_monetaria'),borderColor:'#1e3a8a',backgroundColor:'rgba(30,58,138,0.2)',fill:true,borderWidth:3}]);
-            buildC('chartTasas', [{label:'Tasa Política',data:m('tasa_politica_tea'),borderColor:'#1e3a8a',borderWidth:3,yAxisID:'y'},{label:'BADLAR',data:m('badlar_tea'),borderColor:'#2563eb',borderWidth:3,yAxisID:'y'},{label:'IPC Mensual',data:m('ipc_mensual'),backgroundColor:'rgba(239,68,68,0.15)',type:'bar',yAxisID:'y1'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
-            buildC('chartDiario', [{label:'BADLAR',data:d('badlar_tea'),borderColor:'#2563eb',borderWidth:2},{label:'TAMAR',data:d('tamar_tea'),borderColor:'#3b82f6',borderWidth:2}]);
+            buildC('chartAgregados', [{label:'M2',data:m('m2'),borderColor:'#3b82f6',fill:false,borderWidth:3},{label:'Base Monetaria',data:m('base_monetaria'),borderColor:'#1e3a8a',fill:false,borderWidth:3}]);
+            buildC('chartTasas', [{label:'Tasa Política',data:m('tasa_politica_tea'),borderColor:'#1e3a8a',fill:false,borderWidth:3,yAxisID:'y'},{label:'BADLAR',data:m('badlar_tea'),borderColor:'#3b82f6',fill:false,borderWidth:3,yAxisID:'y'},{label:'IPC Mensual',data:m('ipc_mensual'),backgroundColor:'#93c5fd',type:'bar',yAxisID:'y1'}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}});
+            buildC('chartDiario', [{label:'BADLAR',data:d('badlar_tea'),borderColor:'#1e3a8a',fill:false,borderWidth:2},{label:'TAMAR',data:d('tamar_tea'),borderColor:'#3b82f6',fill:false,borderWidth:2}]);
             
             initGen();
+            filtrarTexto(); 
             
             const loader = document.getElementById('loader');
             loader.style.opacity = '0';

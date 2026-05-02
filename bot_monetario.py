@@ -3,21 +3,11 @@ import pandas as pd
 import json
 import warnings
 import os
-import time
+import glob
 
 warnings.filterwarnings('ignore')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-print("\n" + "="*50)
-print("=== DIAGNÓSTICO DE SISTEMA Y ARCHIVOS (GITHUB) ===")
-print(f"[DIAG] Ruta de trabajo (BASE_DIR): {BASE_DIR}")
-try:
-    archivos = os.listdir(BASE_DIR)
-    print(f"[DIAG] Archivos detectados en la carpeta: {archivos}")
-except Exception as e:
-    print(f"[DIAG] Error leyendo la carpeta: {e}")
-print("="*50 + "\n")
 
 VARS_MENSUAL = {
     110: 'adelantos', 111: 'documentos', 112: 'hipotecarios', 113: 'prendarios', 114: 'personales', 115: 'tarjetas',
@@ -30,7 +20,6 @@ VARS_MENSUAL = {
 }
 VARS_DIARIO = {35: 'badlar_tea', 45: 'tamar_tea'}
 
-# Disfraz para engañar a los firewalls antibots
 HEADERS_BOT = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'Accept': 'application/json, text/plain, */*',
@@ -81,14 +70,11 @@ def fetch_dolares_history():
     # MEP
     try:
         r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa", headers=HEADERS_BOT, timeout=20, verify=False)
-        print(f"[DIAG MEP] Status API ArgDatos: {r.status_code}")
         if r.status_code == 200:
             df_mep = pd.DataFrame(r.json())
             df_mep['fecha'] = pd.to_datetime(df_mep['fecha'])
             df_d = pd.merge(df_d, df_mep[['fecha', 'venta']].rename(columns={'venta': 'dolar_mep'}), on='fecha', how='outer')
-        else: raise Exception("Status distinto de 200")
-    except Exception as e:
-        print(f"  -> [DIAG MEP] Falló ArgDatos ({e}). Usando Ámbito...")
+    except:
         try:
             now = pd.Timestamp.now().strftime('%Y-%m-%d')
             r = requests.get(f"https://mercados.ambito.com//dolar/mep/historico-general/2004-01-01/{now}", headers=HEADERS_BOT, verify=False)
@@ -99,12 +85,11 @@ def fetch_dolares_history():
                 df_mep['dolar_mep'] = df_mep['Venta'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False)
                 df_mep['dolar_mep'] = pd.to_numeric(df_mep['dolar_mep'], errors='coerce')
                 df_d = pd.merge(df_d, df_mep[['fecha', 'dolar_mep']].dropna(), on='fecha', how='outer')
-        except Exception as e: print(f"  -> Error MEP alternativo: {e}")
+        except Exception as e: pass
 
     # BLUE
     try:
         r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/blue", headers=HEADERS_BOT, timeout=20, verify=False)
-        print(f"[DIAG BLUE] Status API ArgDatos: {r.status_code}")
         if r.status_code == 200:
             df_blue = pd.DataFrame(r.json())
             df_blue['fecha'] = pd.to_datetime(df_blue['fecha'])
@@ -112,9 +97,7 @@ def fetch_dolares_history():
                 df_d = df_blue[['fecha', 'venta']].rename(columns={'venta': 'dolar_blue'})
             else:
                 df_d = pd.merge(df_d, df_blue[['fecha', 'venta']].rename(columns={'venta': 'dolar_blue'}), on='fecha', how='outer')
-        else: raise Exception("Status distinto de 200")
-    except Exception as e:
-        print(f"  -> [DIAG BLUE] Falló ArgDatos ({e}). Usando Ámbito...")
+    except:
         try:
             now = pd.Timestamp.now().strftime('%Y-%m-%d')
             r = requests.get(f"https://mercados.ambito.com//dolar/informal/historico-general/2004-01-01/{now}", headers=HEADERS_BOT, verify=False)
@@ -128,12 +111,11 @@ def fetch_dolares_history():
                     df_d = df_b[['fecha', 'dolar_blue']].dropna()
                 else:
                     df_d = pd.merge(df_d, df_b[['fecha', 'dolar_blue']].dropna(), on='fecha', how='outer')
-        except Exception as e: print(f"  -> Error Blue alternativo: {e}")
+        except Exception as e: pass
 
-    # CCL (AGREGADO)
+    # CCL
     try:
         r = requests.get("https://api.argentinadatos.com/v1/cotizaciones/dolares/contadoconliqui", headers=HEADERS_BOT, timeout=20, verify=False)
-        print(f"[DIAG CCL] Status API ArgDatos: {r.status_code}")
         if r.status_code == 200:
             df_ccl = pd.DataFrame(r.json())
             df_ccl['fecha'] = pd.to_datetime(df_ccl['fecha'])
@@ -141,9 +123,7 @@ def fetch_dolares_history():
                 df_d = df_ccl[['fecha', 'venta']].rename(columns={'venta': 'dolar_ccl'})
             else:
                 df_d = pd.merge(df_d, df_ccl[['fecha', 'venta']].rename(columns={'venta': 'dolar_ccl'}), on='fecha', how='outer')
-        else: raise Exception("Status distinto de 200")
-    except Exception as e:
-        print(f"  -> [DIAG CCL] Falló ArgDatos ({e}). Usando Ámbito...")
+    except:
         try:
             now = pd.Timestamp.now().strftime('%Y-%m-%d')
             r = requests.get(f"https://mercados.ambito.com//dolar/contado-con-liqui/historico-general/2004-01-01/{now}", headers=HEADERS_BOT, verify=False)
@@ -157,33 +137,26 @@ def fetch_dolares_history():
                     df_d = df_c[['fecha', 'dolar_ccl']].dropna()
                 else:
                     df_d = pd.merge(df_d, df_c[['fecha', 'dolar_ccl']].dropna(), on='fecha', how='outer')
-        except Exception as e: print(f"  -> Error CCL alternativo: {e}")
+        except Exception as e: pass
 
     return df_d
 
 def fetch_riesgo_pais():
     print("Descargando Riesgo País...")
     try:
-        print("[DIAG RP] Intentando API ArgentinaDatos...")
         r = requests.get("https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais", headers=HEADERS_BOT, timeout=20, verify=False)
-        print(f"[DIAG RP] Código HTTP ArgentinaDatos: {r.status_code}")
         if r.status_code == 200:
             df_rp = pd.DataFrame(r.json())
             df_rp['fecha'] = pd.to_datetime(df_rp['fecha'])
             df_rp = df_rp.rename(columns={'valor': 'riesgo_pais'})
-            print("  -> Riesgo País obtenido de ArgentinaDatos")
             return df_rp[['fecha', 'riesgo_pais']].sort_values('fecha')
-        else:
-            print(f"[DIAG RP] Error de respuesta ArgDatos: {r.text[:100]}")
-    except Exception as e:
-        print(f"[DIAG RP] Excepción con ArgentinaDatos: {e}")
+    except:
+        pass
         
-    print("  -> ArgentinaDatos bloqueado. Intentando por fuente alternativa (Ámbito)...")
     try:
         now = pd.Timestamp.now().strftime('%Y-%m-%d')
         url = f"https://mercados.ambito.com//riesgopais/historico-general/2004-01-01/{now}"
         r = requests.get(url, headers=HEADERS_BOT, timeout=20, verify=False)
-        print(f"[DIAG RP] Código HTTP Ámbito: {r.status_code}")
         if r.status_code == 200:
             data = r.json()
             if len(data) > 1:
@@ -191,58 +164,67 @@ def fetch_riesgo_pais():
                 df_rp['fecha'] = pd.to_datetime(df_rp['Fecha'], format='%d-%m-%Y', errors='coerce')
                 df_rp['riesgo_pais'] = df_rp['Valor'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False)
                 df_rp['riesgo_pais'] = pd.to_numeric(df_rp['riesgo_pais'], errors='coerce')
-                print("  -> Riesgo País obtenido con éxito desde Ámbito")
                 return df_rp[['fecha', 'riesgo_pais']].dropna().sort_values('fecha')
-        else:
-             print(f"[DIAG RP] Error de respuesta Ámbito: {r.text[:100]}")
-    except Exception as e: 
-        print(f"  -> Error Riesgo País Ámbito: {e}")
+    except Exception as e: pass
         
     return pd.DataFrame(columns=['fecha', 'riesgo_pais'])
 
-def fetch_us_cpi():
-    print("Procesando CPI de EEUU (Inflación en Dólares)...")
+def fetch_us_cpi(df_memoria):
+    print("Procesando CPI de EEUU (Inflación en Dólares desde BLS)...")
     df_cpi = pd.DataFrame(columns=['fecha', 'us_cpi'])
     
-    # Nombre del archivo EXCLUSIVAMENTE exacto
-    cpi_path = os.path.join(BASE_DIR, 'CPIAUCSL.xlsx')
-    print(f"[DIAG CPI] Buscando el archivo EXACTO en: {cpi_path}")
-    print(f"[DIAG CPI] ¿La función de Python ve el archivo? {os.path.exists(cpi_path)}")
+    if not df_memoria.empty and 'us_cpi' in df_memoria.columns:
+        df_cpi = df_memoria[['us_cpi']].dropna().reset_index()
+        df_cpi['fecha'] = pd.to_datetime(df_cpi['fecha'], errors='coerce')
 
-    if os.path.exists(cpi_path):
+    cpi_path = None
+    
+    # Búsqueda inteligente: escanea la carpeta de Descargas (independientemente del número de archivo)
+    try:
+        downloads_folder = os.path.join(os.path.expanduser('~'), 'Downloads')
+        archivos_bls = glob.glob(os.path.join(downloads_folder, 'SeriesReport*.xlsx'))
+        if archivos_bls:
+            # Agarramos el modificado más recientemente por si bajaste varios
+            cpi_path = max(archivos_bls, key=os.path.getmtime)
+            print(f"  -> Archivo BLS encontrado dinámicamente en Downloads: {os.path.basename(cpi_path)}")
+    except Exception as e:
+        pass
+
+    # Fallback: Si no está en Downloads, busca en la carpeta del repositorio
+    if not cpi_path or not os.path.exists(cpi_path):
         try:
-            df_hist = pd.read_excel(cpi_path)
-            
-            col_fecha = None
-            for col in df_hist.columns:
-                if str(col).strip().lower() in ['date', 'observation_date', 'fecha']:
-                    col_fecha = col
+            for file in os.listdir(BASE_DIR):
+                if file.lower().startswith('seriesreport') and file.lower().endswith('.xlsx'):
+                    cpi_path = os.path.join(BASE_DIR, file)
+                    print(f"  -> Archivo BLS detectado en el repositorio: {file}")
                     break
-            if not col_fecha: col_fecha = df_hist.columns[0]
-            
-            col_valor = None
-            for col in df_hist.columns:
-                if str(col).strip().upper() == 'CPIAUCSL':
-                    col_valor = col
-                    break
-            if not col_valor: col_valor = df_hist.columns[1]
-            
-            df_hist['fecha'] = pd.to_datetime(df_hist[col_fecha], errors='coerce')
-            df_hist = df_hist.rename(columns={col_valor: 'us_cpi'})
-            df_cpi = df_hist[['fecha', 'us_cpi']].dropna(subset=['fecha', 'us_cpi'])
-            df_cpi['us_cpi'] = pd.to_numeric(df_cpi['us_cpi'], errors='coerce')
-            print(f"  -> ¡Éxito! CPI leído desde archivo Excel: {len(df_cpi)} meses.")
         except Exception as e:
-            print(f"  -> [DIAG CPI] Error FATAL al intentar leer el Excel: {e}")
-    else:
-        print("  -> [DIAG CPI] AVISO: El archivo no existe o Python no tiene permisos para leerlo.")
+            pass
+
+    if cpi_path and os.path.exists(cpi_path):
+        try:
+            df_hist = pd.read_excel(cpi_path, skiprows=11)
+            
+            if 'Year' in df_hist.columns and 'Jan' in df_hist.columns:
+                meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                df_hist = df_hist.melt(id_vars=['Year'], value_vars=[m for m in meses if m in df_hist.columns], var_name='Month', value_name='us_cpi')
+                df_hist = df_hist.dropna(subset=['us_cpi'])
+                df_hist['fecha'] = pd.to_datetime(df_hist['Year'].astype(str) + '-' + df_hist['Month'], format='%Y-%b')
+                
+                if df_cpi.empty:
+                    df_cpi = df_hist[['fecha', 'us_cpi']]
+                else:
+                    df_cpi = pd.concat([df_cpi, df_hist[['fecha', 'us_cpi']]]).drop_duplicates(subset=['fecha'], keep='last')
+                print(f"  -> ¡Nuevos datos del BLS integrados! Primer dato: {df_cpi['fecha'].min().strftime('%Y-%m')} | Último dato: {df_cpi['fecha'].max().strftime('%Y-%m')}")
+        except Exception as e:
+            print(f"  -> Error procesando el archivo del BLS: {e}")
         
     return df_cpi.sort_values('fecha')
 
 def fetch_tasa_fed():
     print("Descargando Tasa de la FED (EFFR)...")
     now = pd.Timestamp.now()
-    start_date = "2004-01-01"
+    start_date = "2000-01-01" 
     end_date = now.strftime('%Y-%m-%d')
     url = f"https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate={start_date}&endDate={end_date}"
     
@@ -264,11 +246,8 @@ def fetch_tasa_fed():
                 df['periodo'] = df['fecha'].dt.to_period('M')
                 df_mensual = df.groupby('periodo').last().reset_index()
                 df_mensual['fecha'] = df_mensual['periodo'].dt.strftime('%Y-%m')
-                
-                print(f"  -> ¡Tasa FED descargada! {len(df_mensual)} meses obtenidos.")
                 return df_mensual[['fecha', 'tasa_fed']]
-    except Exception as e:
-        print(f"  -> Error al extraer Tasa FED: {e}")
+    except Exception as e: pass
         
     return pd.DataFrame(columns=['fecha', 'tasa_fed'])
 
@@ -345,7 +324,7 @@ df_mensual_old = pd.DataFrame()
 df_diario_old = pd.DataFrame()
 
 if os.path.exists(json_path):
-    print("-> Cargando datos históricos anteriores para prevenir blancos si falla una API...")
+    print("-> Cargando datos históricos anteriores para prevenir blancos...")
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
             data_old = json.load(f)
@@ -361,18 +340,27 @@ if os.path.exists(json_path):
                 df_diario_old = df_diario_old.dropna(subset=['fecha'])
                 df_diario_old['fecha'] = df_diario_old['fecha'].dt.strftime('%Y-%m-%d')
                 df_diario_old = df_diario_old.set_index('fecha')
-    except Exception as e:
-        print(f"-> Aviso: No se pudo cargar el JSON previo: {e}")
+    except Exception as e: pass
 
 print("=== CONSTRUYENDO BASE DE DATOS ===")
 df_dolares = fetch_dolares_history()
 df_itcrm = fetch_itcrm_excel()
-df_us_cpi = fetch_us_cpi()
+df_us_cpi = fetch_us_cpi(df_mensual_old)
 df_fed = fetch_tasa_fed()
 df_bandas = fetch_bandas_cambiarias()
 df_rp = fetch_riesgo_pais()
 
 df_mensual = pd.DataFrame(columns=['fecha'])
+
+for df_externo in [df_us_cpi, df_itcrm, df_dolares, df_fed]:
+    if not df_externo.empty:
+        df_ext = df_externo.copy()
+        df_ext['fecha'] = pd.to_datetime(df_ext['fecha'], errors='coerce')
+        df_ext = df_ext.dropna(subset=['fecha'])
+        df_ext['periodo'] = df_ext['fecha'].dt.to_period('M')
+        df_ext = df_ext.groupby('periodo').last().reset_index()
+        df_ext['fecha'] = df_ext['periodo'].dt.strftime('%Y-%m')
+        df_mensual = pd.merge(df_mensual, df_ext.drop(columns=['periodo']), on='fecha', how='outer')
 
 for id_var, nombre in VARS_MENSUAL.items():
     df_temp = fetch_bcra_history(id_var, nombre, is_daily=False)
@@ -386,17 +374,6 @@ if not df_bandas.empty:
     df_bandas_m = df_bandas_m.groupby('periodo').last().reset_index()
     df_bandas_m['fecha'] = df_bandas_m['periodo'].dt.strftime('%Y-%m')
     df_mensual = pd.merge(df_mensual, df_bandas_m[['fecha', 'banda_inferior', 'banda_superior']], on='fecha', how='outer')
-
-for df_externo in [df_itcrm, df_dolares, df_us_cpi, df_fed]:
-    if not df_externo.empty:
-        df_ext = df_externo.copy()
-        df_ext['fecha'] = pd.to_datetime(df_ext['fecha'], errors='coerce')
-        df_ext = df_ext.dropna(subset=['fecha'])
-        
-        df_ext['periodo'] = df_ext['fecha'].dt.to_period('M')
-        df_ext = df_ext.groupby('periodo').last().reset_index()
-        df_ext['fecha'] = df_ext['periodo'].dt.strftime('%Y-%m')
-        df_mensual = pd.merge(df_mensual, df_ext.drop(columns=['periodo']), on='fecha', how='outer')
 
 if not df_rp.empty:
     df_rp_m = df_rp.copy()
@@ -442,7 +419,6 @@ if len(df_mensual.columns) > 1:
         df_mensual['ipc_index'] = index_vals
         df_mensual['ipc_index'] = df_mensual['ipc_index'] / df_mensual['ipc_index'].iloc[-1]
         
-        # AGREGAMOS EL CCL ACÁ TAMBIÉN
         ars_cols = ['adelantos', 'documentos', 'hipotecarios', 'prendarios', 'personales', 'tarjetas', 
                     'cc', 'ca', 'plazo_fijo', 'base_monetaria', 'm2', 'm2_transaccional', 
                     'circulacion_monetaria', 'billetes_monedas', 'pases_pasivos', 'lefi',
@@ -456,10 +432,11 @@ if len(df_mensual.columns) > 1:
     if 'tc_minorista_corriente' in df_mensual.columns:
         if 'dolar_mep_corriente' in df_mensual.columns: df_mensual['brecha_mep'] = ((df_mensual['dolar_mep_corriente'] / df_mensual['tc_minorista_corriente']) - 1) * 100
         if 'dolar_blue_corriente' in df_mensual.columns: df_mensual['brecha_blue'] = ((df_mensual['dolar_blue_corriente'] / df_mensual['tc_minorista_corriente']) - 1) * 100
-        # CÁLCULO DE LA BRECHA DEL CCL
         if 'dolar_ccl_corriente' in df_mensual.columns: df_mensual['brecha_ccl'] = ((df_mensual['dolar_ccl_corriente'] / df_mensual['tc_minorista_corriente']) - 1) * 100
     if 'rem_interanual' in df_mensual.columns: df_mensual['rem_interanual'] = df_mensual['rem_interanual'].shift(12)
-    df_mensual = df_mensual.where(pd.notnull(df_mensual), None).tail(300)
+    
+    # 600 MESES = 50 AÑOS! Esto garantiza que no te mutile los datos del 2000 nunca más.
+    df_mensual = df_mensual.where(pd.notnull(df_mensual), None).tail(600)
 
 # --- CONSTRUCCIÓN DATASET DIARIO ---
 df_diario = pd.DataFrame(columns=['fecha'])
