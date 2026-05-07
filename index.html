@@ -18,6 +18,10 @@
     --ceer-informes: #0000DE;
     --ceer-morado: #4404C5;
     
+    /* TONOS DERIVADOS PARA MÁS VARIABLES */
+    --ceer-azul-claro: #5C5CFF;
+    --ceer-morado-claro: #8A52FF;
+    
     --ceer-fondo: #FAFAFA;
     --ceer-tarjeta: #F2F2F2;
     
@@ -190,6 +194,9 @@ body.mobile-mode .generator-panel { padding: 1.2rem;}
     const C_PRINCIPAL = '#2121E2';
     const C_INFORMES = '#0000DE';
     const C_MORADO = '#4404C5';
+    // Colores derivados para soportar más de 3 variables sin salir de la paleta
+    const C_AZUL_CLARO = '#5C5CFF'; 
+    const C_MORADO_CLARO = '#8A52FF'; 
     const C_TEXT = '#111827';
     
     Chart.register({id:'customCanvasBackgroundColor',beforeDraw:(c)=>{const ctx=c.canvas.getContext('2d');ctx.save();ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#FAFAFA';ctx.fillRect(0,0,c.width,c.height);ctx.restore();}});
@@ -459,9 +466,20 @@ body.mobile-mode .generator-panel { padding: 1.2rem;}
             
             const getNom = (k) => window.data_m[k+'_corriente'] ? window.data_m[k+'_corriente'] : (window.data_m[k] || []);
 
-            // APLICANDO COLORES OFICIALES (Principal, Informes, Morado)
-            buildC('chartPrestamos', [{label:'Prendarios',data:m('prendarios'),backgroundColor:C_PRINCIPAL,fill:true,stacked:true,borderWidth:0},{label:'Hipotecarios',data:m('hipotecarios'),backgroundColor:C_INFORMES,fill:true,stacked:true,borderWidth:0},{label:'Personales',data:m('personales'),backgroundColor:C_MORADO,fill:true,stacked:true,borderWidth:0},{label:'Tarjetas',data:m('tarjetas'),backgroundColor:'rgba(33,33,226,0.4)',fill:true,stacked:true,borderWidth:0}], {}, true);
-            buildC('chartDepositos', [{label:'Plazo Fijo',data:m('plazo_fijo'),backgroundColor:C_PRINCIPAL,fill:true,stacked:true,borderWidth:0},{label:'Cajas Ahorro',data:m('ca'),backgroundColor:C_INFORMES,fill:true,stacked:true,borderWidth:0},{label:'Cuentas Ctes',data:m('cc'),backgroundColor:C_MORADO,fill:true,stacked:true,borderWidth:0}], {}, true);
+            // APLICANDO COLORES OFICIALES Y DERIVADOS
+            buildC('chartPrestamos', [
+                {label:'Prendarios',data:m('prendarios'),backgroundColor:C_PRINCIPAL,fill:true,stacked:true,borderWidth:0},
+                {label:'Hipotecarios',data:m('hipotecarios'),backgroundColor:C_INFORMES,fill:true,stacked:true,borderWidth:0},
+                {label:'Personales',data:m('personales'),backgroundColor:C_MORADO,fill:true,stacked:true,borderWidth:0},
+                {label:'Tarjetas',data:m('tarjetas'),backgroundColor:C_AZUL_CLARO,fill:true,stacked:true,borderWidth:0}
+            ], {}, true);
+            
+            buildC('chartDepositos', [
+                {label:'Plazo Fijo',data:m('plazo_fijo'),backgroundColor:C_PRINCIPAL,fill:true,stacked:true,borderWidth:0},
+                {label:'Cajas Ahorro',data:m('ca'),backgroundColor:C_INFORMES,fill:true,stacked:true,borderWidth:0},
+                {label:'Cuentas Ctes',data:m('cc'),backgroundColor:C_MORADO,fill:true,stacked:true,borderWidth:0}
+            ], {}, true);
+            
             buildC('chartUSD', [{label:'Depósitos (USD Nominales)',data:getNom('depositos_usd'),borderColor:C_MORADO,borderWidth:2.5,fill:false},{label:'Préstamos (USD Nominales)',data:getNom('prestamos_usd'),borderColor:C_PRINCIPAL,borderWidth:2.5,fill:false}]);
             
             buildC('chartRiesgoPais', [{label:'Riesgo País',data:m('riesgo_pais'),borderColor:C_PRINCIPAL,fill:false,borderWidth:2.5}], {}, false, false, 'Fuente: CEER en base a Ámbito / ArgentinaDatos');
@@ -473,7 +491,7 @@ body.mobile-mode .generator-panel { padding: 1.2rem;}
             ]);
             
             buildC('chartITCRM', [{label:'ITCRM General',data:m('itcrm'),borderColor:C_PRINCIPAL,fill:false,borderWidth:2.5}]);
-            buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:C_PRINCIPAL,yAxisID:'y',borderWidth:2.5,fill:false},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:C_MORADO,borderRadius:4}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y BLS');
+            buildC('chartReservas', [{label:'Reservas Brutas',data:m('reservas'),borderColor:C_PRINCIPAL,yAxisID:'y',borderWidth:2.5,fill:false},{label:'Compras BCRA',data:m('compra_divisas'),type:'bar',yAxisID:'y1',backgroundColor:C_MORADO_CLARO,borderRadius:4}], {y1:{type:'linear',position:'right',grid:{display:false},border:{display:false}}}, false, false, 'Fuente: CEER en base a BCRA y BLS');
             buildC('chartCarrera', [{label:'Devaluación (%)',data:m('tc_mayorista_var'),borderColor:C_PRINCIPAL,fill:false,borderWidth:2.5},{label:'IPC (%)',data:m('ipc_mensual'),borderColor:C_MORADO,fill:false,borderWidth:2.5}]);
             buildC('chartIPC', [{label:'IPC Interanual',data:m('ipc_interanual'),borderColor:C_PRINCIPAL,fill:false,borderWidth:2.5},{label:'REM 12m',data:m('rem_interanual'),borderColor:C_MORADO,borderDash:[5,5],fill:false,borderWidth:2.5}]);
             buildC('chartFED', [{label:'Tasa FED (EFFR %)',data:m('tasa_fed'),borderColor:C_PRINCIPAL,fill:false,borderWidth:2.5}], {}, false, false, 'Fuente: CEER en base a NY Fed');
