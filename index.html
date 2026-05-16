@@ -44,12 +44,14 @@ html, body {
     overflow-x: hidden; /* BLOQUEO DE SCROLL HORIZONTAL */
 }
 
-/* HEADER CEER */
-.header{background-color:var(--ceer-principal);color:white;padding:1.5rem 2rem;text-align:left;width:100%;}
-.header h1{font-family:var(--font-texto);font-weight:800;font-size:2.2rem;margin:0 0 0.4rem 0; letter-spacing:-0.5px;}
-.header p{font-family:var(--font-texto);font-weight:500;font-size:1rem;margin:0;opacity:0.9;}
+/* HEADER CEER CON LOGO */
+.header { background-color: var(--ceer-principal); color: white; padding: 1.5rem 1rem; width: 100%; }
+.header-content { display: flex; align-items: center; justify-content: flex-start; gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+.logo-ceer { height: 70px; object-fit: contain; }
+.header h1 { font-family: var(--font-texto); font-weight: 800; font-size: 2.2rem; margin: 0 0 0.4rem 0; letter-spacing: -0.5px; }
+.header p { font-family: var(--font-texto); font-weight: 500; font-size: 1rem; margin: 0; opacity: 0.9; }
 
-.container{max-width:1200px;margin:0 auto;padding:1.5rem 1rem;width:100%;}
+.container{max-width:1200px;margin:0 auto;padding:1.5rem 1rem;width:100%; min-height: 70vh;}
 
 /* LOADER */
 #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--ceer-fondo); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.5s ease; }
@@ -98,8 +100,15 @@ html, body {
 .btn-action-gen{background:var(--ceer-morado);color:white;border:none;padding:1rem;border-radius:6px;font-weight:700;font-family:var(--font-texto);cursor:pointer;transition:0.2s; width:100%; font-size:1.05rem;}
 .btn-action-gen:hover{background:var(--ceer-informes);}
 
+/* FOOTER */
+.footer { text-align: center; padding: 2rem 1rem; border-top: 1px solid var(--gray-border); margin-top: 3rem; background-color: white; color: var(--gray-text); font-weight: 500; font-size: 0.95rem; }
+.footer a { color: var(--ceer-principal); text-decoration: none; font-weight: 700; transition: color 0.2s; }
+.footer a:hover { color: var(--ceer-informes); text-decoration: underline; }
+
 /* MODO CELULAR ESTRICTO Y DEFINITIVO */
-body.mobile-mode .header {text-align:center; padding:1.2rem 1rem;}
+body.mobile-mode .header { padding:1.2rem 1rem;}
+body.mobile-mode .header-content { flex-direction: column; text-align: center; gap: 0.8rem; }
+body.mobile-mode .logo-ceer { height: 50px; }
 body.mobile-mode .header h1 {font-size: 1.8rem;}
 body.mobile-mode .chart-grid { grid-template-columns: 1fr; gap: 1.2rem;} 
 body.mobile-mode .gen-vars-container { grid-template-columns: 1fr; gap: 1rem; } 
@@ -125,8 +134,13 @@ body.mobile-mode .generator-panel { padding: 1.2rem;}
 </div>
 
 <div class="header">
-    <h1>Dashboard CEER</h1>
-    <p>Alimentado por: BCRA, BLS, FRED y Ámbito</p>
+    <div class="header-content">
+        <img src="ceer blanco 1.png" alt="Logo CEER" class="logo-ceer">
+        <div>
+            <h1>Dashboard CEER</h1>
+            <p>Alimentado por: BCRA, BLS, FRED y Ámbito</p>
+        </div>
+    </div>
 </div>
 
 <div class="container">
@@ -190,11 +204,17 @@ body.mobile-mode .generator-panel { padding: 1.2rem;}
     </div>
 </div>
 
+<footer class="footer">
+    <p style="margin: 0;">
+        <i class="fas fa-envelope" style="color: var(--ceer-principal); margin-right: 0.5rem; font-size: 1.1rem;"></i> 
+        Contacto: <a href="mailto:ceer@estudiosrenovacion.com">ceer@estudiosrenovacion.com</a>
+    </p>
+</footer>
+
 <script>
     const C_PRINCIPAL = '#2121E2';
     const C_INFORMES = '#0000DE';
     const C_MORADO = '#4404C5';
-    // Colores derivados para soportar más de 3 variables sin salir de la paleta
     const C_AZUL_CLARO = '#5C5CFF'; 
     const C_MORADO_CLARO = '#8A52FF'; 
     const C_TEXT = '#111827';
